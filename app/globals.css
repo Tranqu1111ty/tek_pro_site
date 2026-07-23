@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 :root {
   --navy: #061426;
@@ -6,9 +7,11 @@
   --white: #ffffff;
   --steel: #8d98a7;
   --blueprint: #bfd2e3;
-  --display: "Eastman Alternate Trial", "Eastman Alternate", "Bahnschrift Condensed", "Arial Narrow", Arial, sans-serif;
-  --body: "Segoe UI", Arial, sans-serif;
-  --mono: "Cascadia Mono", "Roboto Mono", Consolas, monospace;
+  --display: "IBM Plex Sans Condensed", "Bahnschrift Condensed", "Arial Narrow", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+  --micro-weight: 500;
+  --micro-tracking: 0.075em;
   --gutter: clamp(22px, 4.3vw, 78px);
   --content: 1600px;
   --line: rgba(191, 210, 227, 0.2);
@@ -81,8 +84,10 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 .site-nav a {
   position: relative;
   font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  font-weight: var(--micro-weight);
+  letter-spacing: 0.065em;
+  line-height: 1.2;
   text-transform: uppercase;
 }
 
@@ -115,7 +120,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   line-height: 1.35;
 }
 
-.site-header-contact a:first-child { font-size: 13px; font-weight: 650; }
+.site-header-contact a:first-child { font-size: 13px; font-weight: 600; }
 .site-header-contact a:last-child { color: #5e6978; font-size: 11px; }
 
 .site-header-cta {
@@ -126,7 +131,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: var(--white);
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.04em;
+  font-weight: var(--micro-weight);
+  letter-spacing: 0.035em;
   text-transform: uppercase;
   transition: background 200ms ease, color 200ms ease;
 }
@@ -211,13 +217,15 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 .footer-bottom,
 .contact-register span {
   font-family: var(--mono);
+  font-weight: var(--micro-weight);
+  font-variant-numeric: tabular-nums;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--micro-tracking);
 }
 
 .hero-kicker {
   margin: 0 0 24px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--blueprint);
 }
 
@@ -227,7 +235,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   font-family: var(--display);
   font-size: clamp(56px, 6vw, 106px);
   font-stretch: condensed;
-  font-weight: 520;
+  font-weight: 500;
   letter-spacing: -0.025em;
   line-height: 0.88;
   text-transform: uppercase;
@@ -270,7 +278,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   font-family: var(--mono);
   font-size: 12px;
   font-style: normal;
-  letter-spacing: 0.08em;
+  font-weight: var(--micro-weight);
+  letter-spacing: var(--micro-tracking);
   text-transform: uppercase;
 }
 
@@ -337,7 +346,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   font-family: var(--display);
   font-size: clamp(49px, 5.4vw, 94px);
   font-stretch: condensed;
-  font-weight: 510;
+  font-weight: 500;
   letter-spacing: -0.025em;
   line-height: 0.94;
   text-transform: uppercase;
@@ -396,7 +405,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: var(--steel);
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.1em;
+  font-weight: var(--micro-weight);
+  letter-spacing: var(--micro-tracking);
   text-transform: uppercase;
 }
 
@@ -438,7 +448,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: var(--blueprint);
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.1em;
+  font-weight: var(--micro-weight);
+  letter-spacing: var(--micro-tracking);
   text-transform: uppercase;
 }
 
@@ -447,7 +458,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   margin: 16px 0 0;
   font-family: var(--display);
   font-size: clamp(21px, 1.55vw, 29px);
-  font-weight: 520;
+  font-weight: 500;
   letter-spacing: -0.015em;
   line-height: 1.05;
   text-transform: uppercase;
@@ -480,7 +491,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: var(--white);
   font-family: var(--body);
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.35;
   text-align: left;
 }
@@ -641,7 +652,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   margin: 0;
   font-family: var(--display);
   font-size: clamp(30px, 2.7vw, 47px);
-  font-weight: 520;
+  font-weight: 500;
   letter-spacing: -0.025em;
   line-height: 0.98;
   text-transform: uppercase;
@@ -652,8 +663,9 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: currentColor;
   font-family: var(--mono);
   font-size: 13px;
-  letter-spacing: 0.08em;
-  opacity: 0.72;
+  font-weight: var(--micro-weight);
+  letter-spacing: var(--micro-tracking);
+  opacity: 0.78;
 }
 
 .process-card > p {
@@ -695,6 +707,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   margin: 18px 0 0;
   font-family: var(--mono);
   font-size: 11px;
+  font-weight: var(--micro-weight);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -736,7 +749,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: #647284;
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.1em;
+  font-weight: var(--micro-weight);
+  letter-spacing: var(--micro-tracking);
   text-transform: uppercase;
 }
 
@@ -745,7 +759,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   margin: 18px 0 0;
   font-family: var(--display);
   font-size: clamp(32px, 3vw, 52px);
-  font-weight: 520;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 0.98;
   text-transform: uppercase;
@@ -845,6 +859,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   padding: 15px;
   font-family: var(--mono);
   font-size: 11px;
+  font-weight: var(--micro-weight);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -896,7 +911,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: #667386;
   font-family: var(--mono);
   font-size: 12px;
-  letter-spacing: 0.09em;
+  font-weight: var(--micro-weight);
+  letter-spacing: var(--micro-tracking);
   text-transform: uppercase;
 }
 
@@ -976,7 +992,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   color: var(--blueprint);
   font-family: var(--mono);
   font-size: 12px;
-  letter-spacing: 0.08em;
+  font-weight: var(--micro-weight);
+  letter-spacing: var(--micro-tracking);
   text-transform: uppercase;
 }
 
@@ -985,7 +1002,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   font-family: var(--display);
   font-size: clamp(34px, 3vw, 52px);
   font-stretch: condensed;
-  font-weight: 520;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 0.94;
   text-transform: uppercase;
@@ -1019,7 +1036,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 .experience-list { margin-top: clamp(52px, 6vw, 84px); }
 .experience-list article { display: grid; grid-template-columns: 18% 1fr; padding: 24px 0; }
 .experience-list article + article { margin-top: 20px; }
-.experience-list span { color: var(--steel); font-family: var(--mono); font-size: 12px; }
+.experience-list span { color: var(--steel); font-family: var(--mono); font-size: 12px; font-weight: var(--micro-weight); }
 .experience-list p { max-width: 1100px; margin: 0; color: var(--blueprint); font-size: 15px; }
 
 .site-footer {
@@ -1143,6 +1160,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
     color: var(--navy);
     font-family: var(--mono);
     font-size: 11px;
+    font-weight: var(--micro-weight);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
   }
   .menu-button i { display: block; width: 14px; height: 1px; background: currentColor; }
@@ -1182,7 +1201,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
     line-height: 0.94;
     overflow-wrap: normal;
   }
-  .hero-kicker { margin-bottom: 18px; font-size: 11px; }
+  .hero-kicker { margin-bottom: 18px; font-size: 12px; }
   .hero-subtitle { max-width: 310px; margin-top: 22px; font-size: 16px; }
   .hero-stage {
     top: auto;
