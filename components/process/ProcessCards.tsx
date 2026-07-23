@@ -1,6 +1,10 @@
 "use client";
 
-import { CardSticky, ContainerScroll } from "@/components/ui/CardSticky";
+import {
+  CardSticky,
+  ContainerScroll,
+  useSequenceEndAlignment,
+} from "@/components/ui/CardSticky";
 
 const stages = [
   ["Инженерные изыскания", "Работы в рамках свидетельства СРО № СРО-И-037-18122012."],
@@ -13,12 +17,14 @@ const stages = [
 ] as const;
 
 export function ProcessCards() {
+  const stackRef = useSequenceEndAlignment();
+
   return (
-    <ContainerScroll className="process-card-stack">
+    <ContainerScroll ref={stackRef} className="process-card-stack">
       {stages.map(([title, description], index) => (
         <CardSticky
           key={title}
-          index={index + 8}
+          index={index}
           incrementY={13}
           incrementZ={10}
           className="process-card"

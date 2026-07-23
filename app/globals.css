@@ -593,6 +593,7 @@ button, input, textarea, select { font: inherit; }
   position: sticky;
   top: clamp(130px, 16vh, 190px);
   min-height: 410px;
+  margin-bottom: var(--copy-end-space, clamp(72px, 7vw, 118px));
   padding: 18px 0 34px;
 }
 
@@ -617,25 +618,38 @@ button, input, textarea, select { font: inherit; }
 .sequence-cards-right { grid-column: 2; }
 
 .process-card-stack,
-.competency-stack { padding-bottom: 10vh; }
+.competency-stack {
+  --stack-top: clamp(104px, 12vh, 132px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(72px, 10vh, 112px);
+  overflow-anchor: none;
+}
 
-.process-card-stack { padding-top: 76px; }
-/* Больший отступ, чем у процессов: перспективный масштаб (translateZ)
-   визуально сдвигает колоду вверх, запас не даёт ей выйти из секции. */
-.competency-stack { padding-top: 132px; }
+.process-card-stack,
+.competency-stack { padding-top: 72px; }
+
+.process-card-stack {
+  padding-bottom: var(--stack-end-space, clamp(110px, 17vh, 145px));
+}
+
+.competency-stack {
+  padding-bottom: var(--stack-end-space, clamp(44px, 8vh, 70px));
+}
 
 .process-card,
 .competency-card {
-  min-height: 310px;
-  margin-bottom: 12vh;
+  margin-bottom: 0;
   overflow: hidden;
   border: 1px solid rgba(191, 210, 227, 0.42);
   border-radius: 8px;
   box-shadow: 0 -16px 42px rgba(6, 20, 38, 0.26);
+  isolation: isolate;
 }
 
 .process-card {
   display: flex;
+  min-height: 340px;
   flex-direction: column;
   justify-content: space-between;
   padding: clamp(28px, 3.3vw, 52px);
@@ -680,18 +694,20 @@ button, input, textarea, select { font: inherit; }
 }
 
 .competency-card {
-  min-height: var(--deck-h, 390px);
+  height: clamp(470px, 31vw, 520px);
+  min-height: 0;
 }
 
-.competency-card-steel { background: var(--steel); color: var(--navy); }
-.competency-card-mist { background: var(--blueprint); color: var(--navy); }
-.competency-card-white { background: var(--white); color: var(--navy); }
-.competency-card-blue { background: var(--black); color: var(--white); }
-.competency-card-navy { background: var(--navy); color: var(--white); }
+.competency-card-steel { --card-surface: var(--steel); background: var(--steel); color: var(--navy); }
+.competency-card-mist { --card-surface: var(--blueprint); background: var(--blueprint); color: var(--navy); }
+.competency-card-white { --card-surface: var(--white); background: var(--white); color: var(--navy); }
+.competency-card-blue { --card-surface: var(--black); background: var(--black); color: var(--white); }
+.competency-card-navy { --card-surface: var(--navy); background: var(--navy); color: var(--white); }
 
 .competency-card-body {
   display: flex;
-  min-height: var(--deck-h, 390px);
+  height: 100%;
+  min-height: 0;
   flex-direction: column;
   padding: clamp(28px, 3.3vw, 52px);
 }
@@ -716,13 +732,99 @@ button, input, textarea, select { font: inherit; }
 }
 
 .competency-card .accordion {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
   margin-top: auto;
   background: color-mix(in srgb, currentColor 7%, transparent);
 }
 .competency-card .accordion-trigger { color: currentColor; font-size: 14px; }
-.competency-card .accordion-content { color: currentColor; opacity: 0.82; }
-.competency-card .accordion-content ul { max-height: 142px; margin: 0; padding: 4px 8px 0 18px; overflow-y: auto; font-size: 13px; }
-.competency-card li { margin: 8px 0; }
+.competency-card .accordion-panel {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-bottom: 0;
+  background: var(--card-surface);
+  box-shadow: 0 -18px 34px rgba(6, 20, 38, 0.18);
+}
+.competency-card .accordion-content {
+  padding: 16px 20px 20px;
+  color: currentColor;
+  opacity: 0.88;
+}
+
+.competency-card .accordion-content ul {
+  max-height: min(190px, 26vh);
+  margin: 0;
+  padding: 2px 12px 2px 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color:
+    color-mix(in srgb, currentColor 42%, transparent)
+    color-mix(in srgb, currentColor 7%, transparent);
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  touch-action: pan-y;
+  font-size: 13px;
+  list-style: none;
+}
+
+.competency-card .accordion-content ul::-webkit-scrollbar {
+  width: 8px;
+}
+
+.competency-card .accordion-content ul::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+.competency-card .accordion-content ul::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+
+.competency-card .accordion-content ul::-webkit-scrollbar-track-piece,
+.competency-card .accordion-content ul::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.competency-card .accordion-content ul::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background:
+    color-mix(in srgb, currentColor 42%, transparent)
+    padding-box;
+}
+
+.competency-card .accordion-content ul::-webkit-scrollbar-thumb:hover {
+  background:
+    color-mix(in srgb, currentColor 60%, transparent)
+    padding-box;
+}
+
+.competency-card .accordion-content li {
+  position: relative;
+  margin: 0;
+  padding: 7px 0 7px 20px;
+  line-height: 1.45;
+}
+
+.competency-card .accordion-content li::before {
+  position: absolute;
+  top: 1.02em;
+  left: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+  opacity: 0.58;
+}
 
 .technical-section { background: var(--black); }
 .technical-register { margin-top: clamp(52px, 6vw, 84px); }
@@ -1585,23 +1687,37 @@ button, input, textarea, select { font: inherit; }
     position: relative;
     top: auto;
     min-height: 0;
+    margin-bottom: 0;
     padding: 0 0 26px;
   }
   .split-sequence-process .sequence-copy { order: -1; }
   .split-sequence-process .sequence-copy-right { width: 100%; }
   .sequence-copy h2 { margin-top: 0; font-size: clamp(33px, 8.8vw, 40px); }
   .sequence-copy .section-note { margin-top: 28px; }
-  .process-card-stack, .competency-stack { padding-bottom: 7vh; }
-  .process-card-stack { padding-top: 40px; }
-  .competency-stack { padding-top: 96px; }
-  .process-card, .competency-card { margin-bottom: 9vh; }
+  .process-card-stack, .competency-stack { gap: 0; padding: 30px 0 5vh; }
+  .process-card,
+  .competency-card {
+    position: relative;
+    top: auto !important;
+    z-index: auto !important;
+    height: auto;
+    margin-bottom: 24px;
+  }
   .process-card { min-height: 300px; }
-  .competency-card { min-height: var(--deck-h, 300px); }
+  .competency-card { min-height: 0; }
   .process-card, .competency-card-body { padding: 30px 24px; }
   .sequence-card-title h3, .competency-card h3 { font-size: clamp(26px, 7vw, 32px); }
   .process-card > p { margin-top: 40px; font-size: 15px; }
-  .competency-card-body { min-height: var(--deck-h, 300px); }
+  .competency-card-body { height: auto; min-height: 360px; }
   .competency-lead { margin-top: 24px; font-size: 16px; }
+  .competency-card .accordion-panel {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    border: 0;
+    box-shadow: none;
+  }
   .technical-register { margin-top: 48px; }
   .normative-card { min-height: 0; }
   .normative-standards-card,
