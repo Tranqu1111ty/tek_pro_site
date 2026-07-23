@@ -48,7 +48,7 @@ test("server-renders the cookie policy", async () => {
 
   const html = await response.text();
   assert.match(html, /Политика использования файлов cookie/);
-  assert.match(html, /tekpro-cookie-consent-v1/);
+  assert.match(html, /локального хранилища/);
   assert.match(html, /сторонние сервисы веб-аналитики/i);
   assert.match(html, /23 июля 2026 года/);
 });
