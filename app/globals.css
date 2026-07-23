@@ -173,8 +173,8 @@ button, input, textarea, select { font: inherit; }
 .cinematic-shade::after {
   content: "";
   position: absolute;
-  inset: 36% 48% 0 0;
-  background: rgba(17, 18, 13, 0.38);
+  inset: 42% 50% 3% 2%;
+  background: rgba(17, 18, 13, 0.32);
 }
 
 .cinematic-copy {
@@ -956,7 +956,7 @@ button, input, textarea, select { font: inherit; }
   display: flex;
   grid-column: 2;
   grid-row: 1 / 3;
-  align-self: stretch;
+  align-self: start;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -965,8 +965,9 @@ button, input, textarea, select { font: inherit; }
   transform: translateX(clamp(-95px, -5.5vw, -40px));
 }
 .certificate img {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   width: 100%;
+  height: auto;
   min-height: 0;
   max-height: none;
   object-fit: contain;
@@ -1313,6 +1314,7 @@ button, input, textarea, select { font: inherit; }
 .contact-register { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 60px; }
 .contact-register div { min-height: 130px; padding: 22px 25px 22px 0; border-right: 1px solid var(--line); }
 .contact-register div:not(:first-child) { padding-left: 25px; }
+.contact-register div:last-child { border-right: 0; }
 .contact-register span { color: var(--steel); font-size: 13px; }
 .contact-register p, .contact-register a { display: block; margin: 14px 0 0; font-size: 15px; }
 .footer-bottom {
@@ -1615,7 +1617,7 @@ button, input, textarea, select { font: inherit; }
   .cinematic { height: calc(100svh - 72px); min-height: 650px; padding: 0 8px 8px; }
   .cinematic-frame { position: relative; min-height: 642px; }
   .cinematic-shade { background: rgba(6, 20, 38, 0.58); }
-  .cinematic-shade::after { inset: 34% 0 0; background: rgba(17, 18, 13, 0.43); }
+  .cinematic-shade::after { inset: 38% 0 2%; background: rgba(17, 18, 13, 0.38); }
   .cinematic-copy { left: calc(var(--gutter) + 14px); right: var(--gutter); bottom: 236px; width: auto; }
   .cinematic h1 {
     max-width: 100%;
