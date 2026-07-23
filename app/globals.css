@@ -563,7 +563,8 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 }
 
 .competencies-section {
-  overflow: visible;
+  /* clip (в отличие от hidden) не создаёт scroll container и не ломает sticky */
+  overflow: clip;
   background: var(--navy);
 }
 
@@ -604,6 +605,9 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 .competency-stack { padding-bottom: 10vh; }
 
 .process-card-stack { padding-top: 76px; }
+/* Больший отступ, чем у процессов: перспективный масштаб (translateZ)
+   визуально сдвигает колоду вверх, запас не даёт ей выйти из секции. */
+.competency-stack { padding-top: 132px; }
 
 .process-card,
 .competency-card {
@@ -660,7 +664,7 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 }
 
 .competency-card {
-  min-height: 390px;
+  min-height: var(--deck-h, 390px);
 }
 
 .competency-card-steel { background: var(--steel); color: var(--navy); }
@@ -669,20 +673,9 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
 .competency-card-blue { background: var(--black); color: var(--white); }
 .competency-card-navy { background: var(--navy); color: var(--white); }
 
-.competency-card-kicker {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  opacity: 0.72;
-}
-
-.competency-card-kicker + .sequence-card-title { margin-top: 40px; }
-
 .competency-card-body {
   display: flex;
-  min-height: 390px;
+  min-height: var(--deck-h, 390px);
   flex-direction: column;
   padding: clamp(28px, 3.3vw, 52px);
 }
@@ -1234,11 +1227,14 @@ button, summary, a { -webkit-tap-highlight-color: transparent; }
   .sequence-copy .section-note { margin-top: 28px; }
   .process-card-stack, .competency-stack { padding-bottom: 7vh; }
   .process-card-stack { padding-top: 40px; }
-  .process-card, .competency-card { min-height: 300px; margin-bottom: 9vh; }
+  .competency-stack { padding-top: 96px; }
+  .process-card, .competency-card { margin-bottom: 9vh; }
+  .process-card { min-height: 300px; }
+  .competency-card { min-height: var(--deck-h, 300px); }
   .process-card, .competency-card-body { padding: 30px 24px; }
   .sequence-card-title h3, .competency-card h3 { font-size: clamp(29px, 8vw, 38px); }
   .process-card > p { margin-top: 40px; font-size: 15px; }
-  .competency-card-body { min-height: 300px; }
+  .competency-card-body { min-height: var(--deck-h, 300px); }
   .competency-lead { margin-top: 24px; font-size: 16px; }
   .technical-register { margin-top: 48px; }
   .normative-card { min-height: 0; }

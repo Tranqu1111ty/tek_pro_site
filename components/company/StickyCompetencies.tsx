@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import { content } from "@/data/content";
 import { CardSticky, ContainerScroll } from "@/components/ui/CardSticky";
 import { Accordion } from "@/components/ui/Accordion";
@@ -39,8 +41,48 @@ const cards = [
 ] as const;
 
 export function StickyCompetencies() {
+  const stackRef = React.useRef<HTMLDivElement>(null);
+
+  // Sticky-карточка вылетает из стека раньше остальных, если её нижний край
+  // ниже: контейнер «доталкивает» её первой. Держим все карточки одной высоты
+  // (по самой высокой), чтобы стек складывался синхронно.
+  React.useEffect(() => {
+    const stack = stackRef.current;
+    if (!stack) return;
+    const bodies = Array.from(stack.querySelectorAll<HTMLElement>(".competency-card-body"));
+    if (bodies.length === 0) return;
+    const sync = () => {
+      stack.style.setProperty("--deck-h", "auto");
+      // Панель открытого аккордеона исключаем из замера: высота колоды
+      // считается по закрытому состоянию, чтобы при раскрытии росла только
+      // сама открытая карточка, а не все сразу.
+      const max = Math.max(
+        ...bodies.map((body) => {
+          const panel = body.querySelector<HTMLElement>(".accordion-panel");
+          return body.offsetHeight - (panel?.offsetHeight ?? 0);
+        }),
+      );
+      stack.style.setProperty("--deck-h", `${max}px`);
+    };
+    sync();
+    // Пересчёт откладываем на следующий кадр: мутация размеров прямо в
+    // колбэке ResizeObserver вызывает "loop completed with undelivered
+    // notifications".
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(sync);
+    };
+    const observer = new ResizeObserver(schedule);
+    observer.observe(stack);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <ContainerScroll className="competency-stack">
+    <ContainerScroll ref={stackRef} className="competency-stack">
       {cards.map((card, index) => (
         <CardSticky
           key={card.title}
@@ -50,7 +92,6 @@ export function StickyCompetencies() {
           className={`competency-card competency-card-${card.tone}`}
         >
           <div className="competency-card-body">
-            <p className="competency-card-kicker">Компетенция</p>
             <div className="sequence-card-title">
               <h3>{card.title}</h3>
             </div>
