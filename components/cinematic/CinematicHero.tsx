@@ -1,102 +1,73 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { content } from "../../data/content";
-import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+
+import { content } from "@/data/content";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+
+const STAGE_INTERVAL = 2400;
 
 export function CinematicHero() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const frameRef = useRef<number | null>(null);
-  const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState(0);
-  const mobile = useMediaQuery("(max-width: 800px)");
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   useEffect(() => {
-    const video = videoRef.current;
-    const section = sectionRef.current;
-    if (!video || !section || mobile || reducedMotion) return;
+    if (reducedMotion) return;
 
-    const update = () => {
-      frameRef.current = null;
-      const rect = section.getBoundingClientRect();
-      const distance = Math.max(1, section.offsetHeight - window.innerHeight);
-      const next = Math.min(1, Math.max(0, -rect.top / distance));
-      setProgress(next);
-      setStage(
-        Math.min(
-          content.hero.keywords.length - 1,
-          Math.floor(next * content.hero.keywords.length),
-        ),
-      );
-      if (Number.isFinite(video.duration) && video.duration > 0) {
-        const target = next * Math.max(0, video.duration - 0.06);
-        if (Math.abs(video.currentTime - target) > 0.04) video.currentTime = target;
-      }
-    };
+    const timer = window.setInterval(() => {
+      setStage((current) => (current + 1) % content.hero.keywords.length);
+    }, STAGE_INTERVAL);
 
-    const onScroll = () => {
-      if (frameRef.current === null) frameRef.current = requestAnimationFrame(update);
-    };
+    return () => window.clearInterval(timer);
+  }, [reducedMotion]);
 
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    video.addEventListener("loadedmetadata", update);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      video.removeEventListener("loadedmetadata", update);
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-    };
-  }, [mobile, reducedMotion]);
+  const activeStage = reducedMotion ? 0 : stage;
 
   return (
-    <section
-      ref={sectionRef}
-      id="top"
-      className={`cinematic-hero${reducedMotion ? " is-reduced" : ""}`}
-      style={{ "--hero-progress": progress } as React.CSSProperties}
-    >
-      <div className="cinematic-sticky">
+    <section className="cinematic" id="top" aria-label="Полный цикл проектирования">
+      <div className="cinematic-frame">
         <video
-          ref={videoRef}
-          className="cinematic-video"
+          className="cinematic-media"
+          src="/media/video_loop.mp4"
           muted
           playsInline
-          preload="metadata"
-          poster="/media/cinematic-poster.jpg"
-          autoPlay={mobile && !reducedMotion}
-          loop={mobile && !reducedMotion}
-          aria-label="Трансформация лесной территории в подготовленную промышленную площадку"
-        >
-          <source src="/media/cinematic.mp4" type="video/mp4" />
-        </video>
-        <div className="cinematic-shade" />
-        <div className="hero-blueprint" aria-hidden="true">
-          <span className="axis axis-x">X / 01</span>
-          <span className="axis axis-y">Y / 01</span>
-          <i className="line line-a" />
-          <i className="line line-b" />
+          autoPlay={!reducedMotion}
+          loop
+          preload="auto"
+          aria-hidden="true"
+        />
+        <div className="cinematic-shade" aria-hidden="true" />
+        <div className="cinematic-grid" aria-hidden="true" />
+
+        <div className="cinematic-copy">
+          <p className="hero-kicker">Инжиниринговая компания / ТЭКПРО</p>
+          <h1>Полный цикл<br />проектирования<br />месторождений</h1>
+          <p className="hero-subtitle">От исходных данных до работающей инфраструктуры</p>
         </div>
-        <div className="hero-copy">
-          <p className="utility-label">{content.hero.eyebrow}</p>
-          <h1>{content.hero.title}</h1>
-          <p className="hero-subtitle">{content.hero.subtitle}</p>
+
+        <div className="hero-stage">
+          <div className="hero-stage-meta">
+            <span>Процесс</span>
+            <em>{String(activeStage + 1).padStart(2, "0")} / {String(content.hero.keywords.length).padStart(2, "0")}</em>
+          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.strong
+              key={content.hero.keywords[activeStage]}
+              initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reducedMotion ? undefined : { opacity: 0, y: -10 }}
+              transition={{ duration: reducedMotion ? 0 : 0.42, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {content.hero.keywords[activeStage]}
+            </motion.strong>
+          </AnimatePresence>
+          <div className="hero-stage-pips" aria-hidden="true">
+            {content.hero.keywords.map((keyword, index) => (
+              <i key={keyword} className={index === activeStage ? "is-active" : undefined} />
+            ))}
+          </div>
         </div>
-        <div className="keyword-track" aria-live="polite">
-          <span className="keyword-index">
-            {String(stage + 1).padStart(2, "0")} / {String(content.hero.keywords.length).padStart(2, "0")}
-          </span>
-          <p>{content.hero.keywords[stage]}</p>
-        </div>
-        <div className="scroll-meter" aria-hidden="true">
-          <span style={{ transform: `scaleX(${progress})` }} />
-        </div>
-        <a className="scroll-cue" href="#about">
-          Смотреть структуру проекта <span>↓</span>
-        </a>
       </div>
     </section>
   );

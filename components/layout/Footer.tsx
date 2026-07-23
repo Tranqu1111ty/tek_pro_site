@@ -1,14 +1,20 @@
 import { content } from "../../data/content";
+import DynamicWaveCanvasBackground from "../ui/dynamic-wave-canvas-background";
 
 export function Footer() {
   return (
     <footer className="site-footer" id="contacts">
-      <div className="footer-grid blueprint-grid">
-        <p className="utility-label">Связаться с ТЭКПРО</p>
-        <h2>Обсудить проект</h2>
-        <a className="contact-primary" href={`mailto:${content.contacts.email}`}>
-          {content.contacts.email}
-        </a>
+      <DynamicWaveCanvasBackground />
+      <div className="footer-grid">
+        <div className="footer-heading">
+          <img src="/media/logo6.png" alt="ТЭКПРО" />
+        </div>
+        <div className="footer-contact-line">
+          <a className="contact-primary" href={`mailto:${content.contacts.email}`}>
+            {content.contacts.email} <span>↗</span>
+          </a>
+          <h2>Обсудить проект</h2>
+        </div>
         <div className="contact-register">
           <div>
             <span>Адрес</span>
@@ -27,10 +33,8 @@ export function Footer() {
             <p>{content.contacts.navigation}</p>
           </div>
         </div>
-        <p className="contact-source-line">{content.contacts.fullLine}</p>
         <div className="footer-bottom">
           <p>© ТЭКПРО</p>
-          <a href={`mailto:${content.contacts.email}`}>E-mail : {content.contacts.email}</a>
           <a href="/documents/ptekpropd.pdf" target="_blank" rel="noreferrer">
             Политика конфиденциальности
           </a>

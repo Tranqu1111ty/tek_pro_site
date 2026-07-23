@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 
+import { content } from "@/data/content";
+
 const links = [
-  ["О компании", "#about"],
+  ["Компания", "#about"],
+  ["Полный цикл", "#cycle"],
   ["Компетенции", "#competencies"],
-  ["Лаборатория", "#laboratory"],
-  ["IT / ИИ", "#it-ai"],
+  ["IT и ИИ", "#it-ai"],
   ["Контакты", "#contacts"],
 ] as const;
 
@@ -16,7 +18,7 @@ export function Header() {
   return (
     <header className="site-header">
       <a className="brand" href="#top" aria-label="ТЭКПРО — на главную">
-        <img src="/media/logo6.png" alt="ТЭКПРО" />
+        <span>ТЭКПРО</span>
       </a>
       <button
         className="menu-button"
@@ -39,6 +41,13 @@ export function Header() {
           </a>
         ))}
       </nav>
+      <div className="site-header-actions">
+        <div className="site-header-contact">
+          <a href="tel:+74953320053">{content.contacts.phone}</a>
+          <a href={`mailto:${content.contacts.email}`}>{content.contacts.email}</a>
+        </div>
+        <a className="site-header-cta" href="#contacts">Обсудить проект</a>
+      </div>
     </header>
   );
 }

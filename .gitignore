@@ -43,7 +43,10 @@ next-env.d.ts
 
 # local preview and original source media (optimized copies live in /public)
 /.codex-dev.log
+/.codex-dev-error.log
 /videos/
 /logo6.png
 /sertificate.jpg
 /ptekpropd.pdf
+/video_loop.mp4
+/design-concepts/
