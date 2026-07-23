@@ -29,15 +29,34 @@ export function Footer() {
             <p>Факс : {content.contacts.fax}</p>
           </div>
           <div>
-            <span>Схема проезда / координаты</span>
+            <span>Координаты</span>
             <p>{content.contacts.navigation}</p>
           </div>
         </div>
+        <dl className="footer-legal-details" aria-label="Реквизиты компании">
+          <div>
+            <dt>ИНН</dt>
+            <dd>{content.legal.inn}</dd>
+          </div>
+          <div>
+            <dt>КПП</dt>
+            <dd>{content.legal.kpp}</dd>
+          </div>
+          <div>
+            <dt>ОГРН</dt>
+            <dd>{content.legal.ogrn}</dd>
+          </div>
+          <div className="footer-okved">
+            <dt>ОКВЭД</dt>
+            <dd>{content.legal.okved}</dd>
+          </div>
+        </dl>
         <div className="footer-bottom">
           <p>© ТЭКПРО</p>
           <a href="/documents/ptekpropd.pdf" target="_blank" rel="noreferrer">
             Политика конфиденциальности
           </a>
+          <a href="/cookie-policy">Политика cookie</a>
           <a href="#top">Наверх ↑</a>
         </div>
       </div>
