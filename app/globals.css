@@ -340,6 +340,14 @@ button, input, textarea, select { font: inherit; }
   margin-inline: auto;
 }
 
+.company-overview > *,
+.split-sequence > *,
+.digital-intro > *,
+.footer-contact-line > *,
+.footer-bottom > * {
+  min-width: 0;
+}
+
 .company-overview h2 {
   grid-column: 1;
   max-width: 1080px;
@@ -382,8 +390,7 @@ button, input, textarea, select { font: inherit; }
 
 .company-info-card {
   position: relative;
-  min-height: 390px;
-  aspect-ratio: 1.2 / 1;
+  min-height: clamp(320px, 27vw, 390px);
   overflow: hidden;
   border: 1px solid rgba(191, 210, 227, 0.28);
   border-radius: 8px;
@@ -1157,10 +1164,11 @@ button, input, textarea, select { font: inherit; }
 .digital-card-copy h3 {
   margin: 20px 0 0;
   font-family: var(--display);
-  font-size: clamp(30px, 2.55vw, 46px);
+  font-size: clamp(26px, 1.8vw, 34px);
   font-weight: 600;
   letter-spacing: -0.035em;
-  line-height: 1;
+  line-height: 1.02;
+  white-space: pre-line;
   text-transform: uppercase;
 }
 
@@ -1173,7 +1181,7 @@ button, input, textarea, select { font: inherit; }
 }
 
 .digital-card-featured .digital-card-copy h3 {
-  font-size: clamp(28px, 2.15vw, 39px);
+  font-size: clamp(25px, 1.65vw, 32px);
 }
 
 .digital-card-featured .digital-card-copy p {
@@ -1527,6 +1535,7 @@ button, input, textarea, select { font: inherit; }
 @media (max-width: 1320px) {
   .site-header { grid-template-columns: minmax(170px, 0.8fr) auto auto; gap: 24px; }
   .site-header-contact { display: none; }
+  .split-sequence-process .sequence-copy-right { width: 100%; }
 }
 
 @media (max-width: 1100px) {
@@ -1574,7 +1583,35 @@ button, input, textarea, select { font: inherit; }
   .footer-policy-links { grid-column: 1 / -1; }
 }
 
-@media (max-width: 760px) {
+@media (min-width: 901px) and (max-width: 1180px) {
+  .cinematic-shade { background: rgba(6, 20, 38, 0.54); }
+  .cinematic-shade::after { inset: 40% 2% 2%; }
+  .cinematic-copy {
+    right: var(--gutter);
+    bottom: 236px;
+    width: auto;
+  }
+  .cinematic h1 {
+    max-width: 900px;
+    font-size: clamp(46px, 4.8vw, 60px);
+  }
+  .hero-stage {
+    top: auto;
+    right: var(--gutter);
+    bottom: 28px;
+    left: auto;
+    width: min(520px, calc(100% - (var(--gutter) * 2)));
+    min-height: 172px;
+    padding: 18px 20px;
+    transform: none;
+  }
+  .hero-stage-meta { margin-bottom: 20px; }
+  .hero-stage strong { font-size: clamp(22px, 2.4vw, 27px); }
+  .hero-stage-progress { margin-top: 20px; }
+  .hero-stage-note { margin-top: 10px; }
+}
+
+@media (max-width: 900px) {
   :root { --gutter: 20px; }
   .site-header { position: relative; grid-template-columns: 1fr auto; min-height: 72px; padding-inline: 20px; }
   .brand { font-size: 25px; }
@@ -1601,6 +1638,8 @@ button, input, textarea, select { font: inherit; }
     display: none;
     align-items: stretch;
     padding: 15px var(--gutter) 24px;
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
     background: var(--white);
     color: var(--navy);
     box-shadow: 0 18px 36px rgba(6, 20, 38, 0.12);
@@ -1621,7 +1660,7 @@ button, input, textarea, select { font: inherit; }
   .cinematic-copy { left: calc(var(--gutter) + 14px); right: var(--gutter); bottom: 236px; width: auto; }
   .cinematic h1 {
     max-width: 100%;
-    font-size: clamp(31px, 8.8vw, 37px);
+    font-size: clamp(28px, 6vw, 48px);
     line-height: 1;
     overflow-wrap: normal;
   }
@@ -1646,16 +1685,23 @@ button, input, textarea, select { font: inherit; }
   .section h2, .site-footer h2 {
     max-width: 100%;
     margin-top: 0;
-    font-size: clamp(33px, 8.8vw, 40px);
+    font-size: clamp(33px, 6vw, 48px);
     line-height: 1.02;
-    overflow-wrap: normal;
+    hyphens: auto;
+    overflow-wrap: break-word;
   }
   .section-note { margin-top: 28px; }
   .company-overview { display: block; }
   .company-overview h2 { margin-top: 0; }
   .positioning-lead { margin-top: 30px; font-size: 17px; text-align: left; }
-  .company-card-grid { grid-auto-columns: minmax(280px, 84vw); margin-top: 38px; }
-  .company-info-card { min-height: 370px; }
+  .company-card-grid {
+    grid-auto-columns: 84vw;
+    margin-top: 38px;
+  }
+  .company-info-card {
+    min-height: clamp(330px, 86vw, 370px);
+    aspect-ratio: auto;
+  }
   .company-card-caption { top: 0; right: 0; left: 0; height: 168px; padding: 18px 20px; }
   .company-card-caption h3 { margin-top: 13px; font-size: 19px; }
   .fact-disclosure { margin-top: 38px; }
@@ -1669,7 +1715,7 @@ button, input, textarea, select { font: inherit; }
   }
   .split-sequence-process .sequence-copy { order: -1; }
   .split-sequence-process .sequence-copy-right { width: 100%; }
-  .sequence-copy h2 { margin-top: 0; font-size: clamp(33px, 8.8vw, 40px); }
+  .sequence-copy h2 { margin-top: 0; font-size: clamp(33px, 6vw, 48px); }
   .sequence-copy .section-note { margin-top: 28px; }
   .process-card-stack, .competency-stack { gap: 0; padding: 30px 0 5vh; }
   .process-card,
@@ -1710,7 +1756,14 @@ button, input, textarea, select { font: inherit; }
   .register-block > header h3 { margin-top: 0; font-size: 31px; }
   .laboratory-block { display: block; }
   .laboratory-layout { display: grid; grid-template-columns: 1fr; }
-  .certificate { display: block; max-width: 320px; transform: none; }
+  .certificate {
+    display: block;
+    grid-column: 1;
+    grid-row: auto;
+    width: min(100%, 320px);
+    max-width: 320px;
+    transform: none;
+  }
   .certificate img { height: auto; max-height: 430px; }
   .computation-layout { grid-template-columns: 1fr; gap: 34px; }
   .computation-note { padding-left: 20px; }
@@ -1723,9 +1776,16 @@ button, input, textarea, select { font: inherit; }
   .digital-gallery { display: none; }
   .digital-gallery-mobile { display: grid; gap: 12px; }
   .digital-card { min-height: clamp(420px, 118vw, 560px); }
-  .digital-card-copy { top: 25px; left: 25px; width: min(82%, 390px); }
+  .digital-card-copy {
+    top: 25px;
+    left: clamp(20px, 4vw, 25px);
+    width: min(calc(100% - (2 * clamp(20px, 4vw, 25px))), 390px);
+  }
   .digital-card-copy h3,
-  .digital-card-featured .digital-card-copy h3 { margin-top: 18px; font-size: clamp(28px, 7.8vw, 36px); }
+  .digital-card-featured .digital-card-copy h3 {
+    margin-top: 18px;
+    font-size: clamp(20px, 6.15vw, 32px);
+  }
   .digital-card-copy p,
   .digital-card-featured .digital-card-copy p { margin-top: 18px; font-size: 16px; }
   .experience-list { margin-top: 48px; }
@@ -1755,6 +1815,30 @@ button, input, textarea, select { font: inherit; }
   .policy-document section { margin-top: 50px; }
   .policy-details div { display: block; }
   .policy-details dd { margin-top: 4px; }
+}
+
+@media (max-width: 420px) {
+  .cinematic h1 { overflow-wrap: anywhere; }
+  .section h2,
+  .site-footer h2,
+  .sequence-copy h2 {
+    font-size: 30px;
+    hyphens: none;
+    overflow-wrap: anywhere;
+  }
+  .normative-card h3,
+  .register-block > header h3 {
+    hyphens: auto;
+    overflow-wrap: anywhere;
+  }
+  .cookie-banner-actions { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 340px) {
+  .cinematic h1 {
+    font-size: 23px;
+    overflow-wrap: normal;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

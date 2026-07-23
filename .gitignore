@@ -50,3 +50,4 @@ next-env.d.ts
 /ptekpropd.pdf
 /video_loop.mp4
 /design-concepts/
+*.log
