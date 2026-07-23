@@ -38,7 +38,6 @@ export function CinematicHero() {
           aria-hidden="true"
         />
         <div className="cinematic-shade" aria-hidden="true" />
-        <div className="cinematic-grid" aria-hidden="true" />
 
         <div className="cinematic-copy">
           <p className="hero-kicker">Инжиниринговая компания / ТЭКПРО</p>
