@@ -8,6 +8,9 @@ export function Footer() {
       <div className="footer-grid">
         <div className="footer-heading">
           <img src="/media/logo6.png" alt="ТЭКПРО" />
+          <a className="footer-back-to-top" href="#top" aria-label="Наверх">
+            <img src="/media/back-to-top.svg" alt="" aria-hidden="true" />
+          </a>
         </div>
         <div className="footer-contact-line">
           <a className="contact-primary" href={`mailto:${content.contacts.email}`}>
@@ -58,7 +61,6 @@ export function Footer() {
               Политика конфиденциальности
             </a>
             <a href="/cookie-policy">Политика cookie</a>
-            <a href="#top">Наверх ↑</a>
           </nav>
         </div>
       </div>
