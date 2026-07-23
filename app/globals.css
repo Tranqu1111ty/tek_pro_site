@@ -421,12 +421,32 @@ button, input, textarea, select { font: inherit; }
   top: 0;
   right: 0;
   left: 0;
-  height: clamp(170px, 13vw, 198px);
-  padding: 22px 26px;
-  border-bottom: 1px solid rgba(191, 210, 227, 0.2);
-  background: rgba(6, 20, 38, 0.5);
+  height: clamp(148px, 10.5vw, 164px);
+  padding: 18px 24px;
   color: var(--white);
-  backdrop-filter: blur(10px);
+}
+
+.company-card-caption::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 -28px;
+  background: linear-gradient(
+    to bottom,
+    rgba(6, 20, 38, 0.5) 0%,
+    rgba(6, 20, 38, 0.28) 68%,
+    rgba(6, 20, 38, 0) 100%
+  );
+  backdrop-filter: blur(14px);
+  opacity: 0.90;
+  content: "";
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+}
+
+.company-card-caption > * {
+  position: relative;
+  z-index: 1;
 }
 
 .company-card-caption span {
@@ -439,7 +459,7 @@ button, input, textarea, select { font: inherit; }
 
 .company-card-caption h3 {
   max-width: 100%;
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   font-family: var(--display);
   font-size: clamp(18px, 1.22vw, 23px);
   font-weight: 600;
@@ -1782,8 +1802,8 @@ button, input, textarea, select { font: inherit; }
     min-height: clamp(330px, 86vw, 370px);
     aspect-ratio: auto;
   }
-  .company-card-caption { top: 0; right: 0; left: 0; height: 168px; padding: 18px 20px; }
-  .company-card-caption h3 { margin-top: 13px; font-size: 19px; }
+  .company-card-caption { top: 0; right: 0; left: 0; height: 148px; padding: 16px 20px; }
+  .company-card-caption h3 { margin-top: 11px; font-size: 19px; }
   .fact-disclosure { margin-top: 38px; }
   .split-sequence { display: flex; flex-direction: column; gap: 40px; }
   .sequence-copy {
