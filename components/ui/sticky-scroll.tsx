@@ -40,7 +40,6 @@ export function StickyScrollGallery({ intro, items }: StickyScrollGalleryProps) 
       <div className="digital-experience">
         <header className="digital-intro">
           <div>
-            <p className="section-index">IT / ИИ</p>
             <h2>
               Промышленные процессы.
               <br />

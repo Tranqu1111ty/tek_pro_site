@@ -101,7 +101,6 @@ export default function Home() {
 
         <section className="section positioning" id="about">
           <div className="company-overview">
-            <p className="section-index">Компания</p>
             <h2>
               Проектируем инфраструктуру,
               <br />
@@ -152,7 +151,6 @@ export default function Home() {
               <ProcessCards />
             </div>
             <div className="sequence-copy sequence-copy-right">
-              <p className="section-index">Стадии / 01–07</p>
               <h2>Семь связанных стадий.<br />Одна инженерная система.</h2>
               <p className="section-note">От исследования территории до контроля реализации объекта.</p>
             </div>
@@ -162,7 +160,6 @@ export default function Home() {
         <section className="section competencies-section" id="competencies">
           <div className="split-sequence split-sequence-competencies">
             <div className="sequence-copy sequence-copy-left">
-              <p className="section-index">Компетенции</p>
               <h2>Работа с территорией,<br />инфраструктурой и рисками.</h2>
               <p className="section-note">
                 Пять направлений: нефтегазовая инфраструктура, проектирование, инженерная защита,
@@ -177,7 +174,6 @@ export default function Home() {
 
         <section className="section technical-section" id="standards">
           <div className="section-grid technical-heading">
-            <p className="section-index">Нормативная база</p>
             <h2>Нормативная база<br />и проверяемые данные.</h2>
             <p className="section-note">Документы, регистрации и область лабораторных испытаний.</p>
           </div>
@@ -208,12 +204,8 @@ export default function Home() {
             </div>
 
             <article className="register-block laboratory-block" id="laboratory">
-              <header><span>ИЛ</span><h3>Лаборатория механики грунтов</h3></header>
+              <header><h3>Лаборатория механики грунтов</h3></header>
               <div className="laboratory-layout">
-                <a className="certificate" href="/media/sertificate.jpg" target="_blank" rel="noreferrer">
-                  <img src="/media/sertificate.jpg" alt="Свидетельство об аккредитации испытательной лаборатории № ИЛ-РОС-000965" />
-                  <span>Открыть свидетельство ↗</span>
-                </a>
                 <div className="laboratory-copy">
                   <p className="document-code">{content.lab.registration}</p>
                   <p>{content.lab.description}</p>
@@ -224,16 +216,24 @@ export default function Home() {
                     <ul>{content.lab.physical.map((item) => <li key={item}>{item}</li>)}</ul>
                   </Accordion>
                 </div>
+                <a className="certificate" href="/media/sertificate.jpg" target="_blank" rel="noreferrer">
+                  <img src="/media/sertificate.jpg" alt="Свидетельство об аккредитации испытательной лаборатории № ИЛ-РОС-000965" />
+                  <span>Открыть свидетельство ↗</span>
+                </a>
               </div>
             </article>
 
             <article className="register-block computation-block">
-              <header><span>Модели</span><h3>Расчёты и моделирование</h3></header>
-              <p>{content.technologies.intro}</p>
-              <Accordion summary="Перечень технологий">
-                <ol>{content.technologies.items.map((item) => <li key={item}>{item}</li>)}</ol>
-              </Accordion>
-              <p className="document-code">{content.projectSupport}</p>
+              <header><h3>Расчёты и моделирование</h3></header>
+              <div className="computation-layout">
+                <div className="computation-main">
+                  <p>{content.technologies.intro}</p>
+                  <Accordion summary="Перечень технологий">
+                    <ol>{content.technologies.items.map((item) => <li key={item}>{item}</li>)}</ol>
+                  </Accordion>
+                </div>
+                <p className="document-code computation-note">{content.projectSupport}</p>
+              </div>
             </article>
           </div>
         </section>
@@ -244,12 +244,11 @@ export default function Home() {
 
         <section className="section experience-section" id="experience">
           <div className="section-grid experience-heading">
-            <p className="section-index">Опыт</p>
             <h2>Документированная<br />практика.</h2>
           </div>
           <div className="experience-list">
-            {content.experience.map((entry, index) => (
-              <article key={entry}><span>{String(index + 1).padStart(2, "0")}</span><p>{entry}</p></article>
+            {content.experience.map((entry) => (
+              <article key={entry}><p>{entry}</p></article>
             ))}
           </div>
         </section>

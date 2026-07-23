@@ -48,8 +48,7 @@ export function CinematicHero() {
 
         <div className="hero-stage">
           <div className="hero-stage-meta">
-            <span>Процесс</span>
-            <em>{String(activeStage + 1).padStart(2, "0")} / {String(content.hero.keywords.length).padStart(2, "0")}</em>
+            <span>Полный цикл работ</span>
           </div>
           <AnimatePresence mode="wait" initial={false}>
             <motion.strong
@@ -62,11 +61,33 @@ export function CinematicHero() {
               {content.hero.keywords[activeStage]}
             </motion.strong>
           </AnimatePresence>
-          <div className="hero-stage-pips" aria-hidden="true">
+          <div className="hero-stage-progress" aria-hidden="true">
             {content.hero.keywords.map((keyword, index) => (
-              <i key={keyword} className={index === activeStage ? "is-active" : undefined} />
+              <span
+                key={keyword}
+                className={
+                  index < activeStage
+                    ? "is-complete"
+                    : index === activeStage
+                      ? "is-active"
+                      : undefined
+                }
+              >
+                {index === activeStage && (
+                  <motion.i
+                    key={`${keyword}-progress`}
+                    initial={reducedMotion ? false : { scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{
+                      duration: reducedMotion ? 0 : STAGE_INTERVAL / 1000,
+                      ease: "linear",
+                    }}
+                  />
+                )}
+              </span>
             ))}
           </div>
+          <p className="hero-stage-note">От изысканий до сопровождения объекта</p>
         </div>
       </div>
     </section>
