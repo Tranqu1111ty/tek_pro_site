@@ -260,6 +260,7 @@ git pull --ff-only
 sudo docker compose build --pull app
 sudo docker compose pull caddy
 sudo docker compose up -d --remove-orphans
+sudo docker compose up -d --no-deps --force-recreate caddy
 
 sudo docker compose ps
 sudo docker compose logs --tail=100 app caddy
@@ -269,17 +270,25 @@ curl -fsS https://217.112.43.150/ >/dev/null \
 
 ## 10. Изменение Caddyfile
 
-После изменения и доставки `Caddyfile` на сервер:
+После изменения и доставки `Caddyfile` на сервер проверить файл отдельным
+одноразовым контейнером:
 
 ```bash
 cd /opt/tekpro-site
 
-sudo docker compose exec -w /etc/caddy caddy \
-  caddy validate --config Caddyfile --adapter caddyfile
+sudo docker run --rm \
+  -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
+  caddy:2.11.4-alpine \
+  validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
-sudo docker compose exec -w /etc/caddy caddy \
-  caddy reload --config Caddyfile --adapter caddyfile
+sudo docker compose up -d --no-deps --force-recreate caddy
 ```
+
+`Caddyfile` смонтирован в контейнер как отдельный файл. Git может заменить его
+новым inode при `git pull`, поэтому обычный `caddy reload` внутри старого
+контейнера способен перечитать прежнюю версию файла. Пересоздание только
+контейнера `caddy` заново подключает актуальный файл и не удаляет тома,
+ACME-аккаунт или сертификаты.
 
 ## 11. Диагностика
 
