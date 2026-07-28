@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="196" height="112" viewBox="0 0 196 112" role="img" aria-labelledby="title">
+  <title id="title">Знак ТЭКПРО</title>
+  <g fill="none" stroke-linecap="butt" stroke-linejoin="round" stroke-width="9">
+    <path d="M4 58h184" stroke="#0093DD"/>
+    <path d="M7 8c39 0 25 96 66 96h115" stroke="#061426"/>
+    <path d="M35 8c39 0 25 96 66 96h87" stroke="#0093DD"/>
+    <path d="M63 8c39 0 25 96 66 96h59" stroke="#061426"/>
+    <path d="M91 8c39 0 25 96 66 96h31" stroke="#0093DD"/>
+  </g>
+</svg>

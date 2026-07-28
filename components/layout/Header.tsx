@@ -18,7 +18,7 @@ export function Header() {
   return (
     <header className="site-header">
       <a className="brand" href="#top" aria-label="ТЭКПРО — на главную">
-        <span>ТЭКПРО</span>
+        <img src="/media/brand/tekpro-logo-compact.svg" alt="ТЭКПРО" />
       </a>
       <button
         className="menu-button"

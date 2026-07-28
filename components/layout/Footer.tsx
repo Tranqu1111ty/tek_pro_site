@@ -7,7 +7,7 @@ export function Footer() {
       <DynamicWaveCanvasBackground />
       <div className="footer-grid">
         <div className="footer-heading">
-          <img src="/media/logo6.png" alt="ТЭКПРО" />
+          <img src="/media/brand/tekpro-logo-reversed.svg" alt="ТЭКПРО" />
           <a className="footer-back-to-top" href="#top" aria-label="Наверх">
             <img src="/media/back-to-top.svg" alt="" aria-hidden="true" />
           </a>
