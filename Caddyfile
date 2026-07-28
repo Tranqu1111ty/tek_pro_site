@@ -1,3 +1,7 @@
+{
+	default_sni 217.112.43.150
+}
+
 217.112.43.150 {
 	tls {
 		issuer acme {
