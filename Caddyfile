@@ -23,17 +23,30 @@ tekpro.ru {
 
 	import security_headers
 
-	@unsupported_method not method GET HEAD
-	respond @unsupported_method 405
+	route {
+		@contact_api {
+			path /api/contact
+			method POST
+		}
+		handle @contact_api {
+			request_body {
+				max_size 16KB
+			}
+			reverse_proxy app:3000
+		}
 
-	@public_assets path /favicon.svg /file.svg /globe.svg /window.svg /documents/* /fonts/* /media/*
-	handle @public_assets {
-		root * /srv/public
-		file_server
-	}
+		@unsupported_method not method GET HEAD
+		respond @unsupported_method 405
 
-	handle {
-		reverse_proxy app:3000
+		@public_assets path /favicon.svg /file.svg /globe.svg /window.svg /documents/* /fonts/* /media/*
+		handle @public_assets {
+			root * /srv/public
+			file_server
+		}
+
+		handle {
+			reverse_proxy app:3000
+		}
 	}
 }
 
