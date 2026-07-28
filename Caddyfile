@@ -1,12 +1,30 @@
+{
+	auto_https disable_redirects
+
+	servers {
+		strict_sni_host on
+	}
+}
+
+(security_headers) {
+	header {
+		Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'self'; img-src 'self' data:; media-src 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests"
+		Permissions-Policy "camera=(), geolocation=(), microphone=(), payment=(), usb=()"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		-Server
+	}
+}
+
 tekpro.ru {
 	encode zstd gzip
 
-	header {
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "SAMEORIGIN"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		-Server
-	}
+	import security_headers
+
+	@unsupported_method not method GET HEAD
+	respond @unsupported_method 405
 
 	@public_assets path /favicon.svg /file.svg /globe.svg /window.svg /documents/* /fonts/* /media/*
 	handle @public_assets {
@@ -17,17 +35,18 @@ tekpro.ru {
 	handle {
 		reverse_proxy app:3000
 	}
-
-	log {
-		output stdout
-		format json
-	}
 }
 
 www.tekpro.ru {
+	import security_headers
 	redir https://tekpro.ru{uri} permanent
 }
 
-http://217.112.43.150 {
+http://tekpro.ru, http://www.tekpro.ru, http://217.112.43.150 {
 	redir https://tekpro.ru{uri} permanent
+}
+
+http:// {
+	header -Server
+	respond "Misdirected Request" 421
 }

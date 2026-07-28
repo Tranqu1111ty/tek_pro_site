@@ -1,26 +1,37 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
-import test from "node:test";
+import { fileURLToPath } from "node:url";
+import { after, before, test } from "node:test";
+
+let origin;
+let server;
+
+before(async () => {
+  const { startProdServer } = await import(
+    "../dist/standalone/node_modules/vinext/dist/server/prod-server.js"
+  );
+  const started = await startProdServer({
+    host: "127.0.0.1",
+    port: 0,
+    outDir: fileURLToPath(new URL("../dist/standalone/dist", import.meta.url)),
+  });
+
+  server = started.server;
+  origin = `http://127.0.0.1:${started.port}`;
+});
+
+after(async () => {
+  if (!server) return;
+
+  await new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+});
 
 async function render(path = "/") {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request(`http://localhost${path}`, {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  );
+  return fetch(`${origin}${path}`, {
+    headers: { accept: "text/html" },
+  });
 }
 
 test("server-renders the TEKPRO corporate site", async () => {

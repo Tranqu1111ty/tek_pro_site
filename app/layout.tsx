@@ -1,8 +1,7 @@
-import type { Metadata } from "next";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
 import "./globals.css";
 
-export const metadata: Metadata = {
+export const metadata = {
   metadataBase: new URL("https://tekpro.ru"),
   title: "ТЭКПРО — комплексное проектирование и инженерные изыскания",
   description:

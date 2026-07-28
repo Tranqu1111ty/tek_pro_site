@@ -171,7 +171,7 @@ sudo docker compose pull caddy
 sudo docker run --rm \
   -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
   caddy:2.11.4-alpine \
-  validate --config /etc/caddy/Caddyfile --adapter caddyfile
+  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 ```
 
 Собрать приложение:
@@ -282,7 +282,7 @@ cd /opt/tekpro-site
 sudo docker run --rm \
   -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
   caddy:2.11.4-alpine \
-  validate --config /etc/caddy/Caddyfile --adapter caddyfile
+  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
 sudo docker compose up -d --no-deps --force-recreate caddy
 ```

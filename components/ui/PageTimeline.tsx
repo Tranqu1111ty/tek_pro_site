@@ -50,7 +50,7 @@ export function PageTimeline() {
     let frame = 0;
 
     const update = () => {
-      const { heroEnd, pageEnd, availableScroll, chapterScrolls } = metricsRef.current;
+      const { heroEnd, availableScroll, chapterScrolls } = metricsRef.current;
       const distanceAfterHero = window.scrollY - heroEnd;
       const nextProgress = Math.min(1, Math.max(0, distanceAfterHero / availableScroll));
       const nextActiveChapter = chapterScrolls.reduce(

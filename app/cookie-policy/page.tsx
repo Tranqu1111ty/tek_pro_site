@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-
 import { content } from "@/data/content";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Политика использования файлов cookie — ТЭКПРО",
   description:
     "Информация об использовании файлов cookie и локального хранилища браузера на сайте ТЭКПРО.",

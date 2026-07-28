@@ -38,7 +38,11 @@ export function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(readStoredConsent() === null);
+    const frame = window.requestAnimationFrame(() => {
+      setIsVisible(readStoredConsent() === null);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   function saveChoice(choice: ConsentChoice) {
