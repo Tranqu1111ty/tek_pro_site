@@ -90,15 +90,15 @@ function validateFields(formData: FormData): FieldErrors {
     errors.name = "Укажите имя длиной от 2 до 80 символов.";
   }
 
-  if (company.length > 120 || hasUnsafeCharacters(company)) {
-    errors.company = "Название компании не должно превышать 120 символов.";
+  if (company.length < 2 || company.length > 120 || hasUnsafeCharacters(company)) {
+    errors.company = "Укажите название компании длиной от 2 до 120 символов.";
   }
 
   if (phoneDigits.length !== 11 || !phoneDigits.startsWith("7")) {
     errors.phone = "Введите российский номер из 10 цифр после +7.";
   }
 
-  if (email && (email.length > 120 || !emailPattern.test(email))) {
+  if (!email || email.length > 120 || !emailPattern.test(email)) {
     errors.email = "Проверьте адрес электронной почты.";
   }
 
@@ -361,11 +361,13 @@ export function ProjectInquiryModal({ onClose }: ProjectInquiryModalProps) {
               </label>
 
               <label className={fieldClassName("company", "project-form-field")}>
-                <span className="project-form-label">Компания</span>
+                <span className="project-form-label">Компания *</span>
                 <input
                   name="company"
                   type="text"
                   autoComplete="organization"
+                  required
+                  minLength={2}
                   maxLength={120}
                   aria-invalid={Boolean(fieldErrors.company)}
                   aria-describedby={fieldErrors.company ? "project-company-error" : undefined}
@@ -405,11 +407,12 @@ export function ProjectInquiryModal({ onClose }: ProjectInquiryModalProps) {
               </label>
 
               <label className={fieldClassName("email", "project-form-field")}>
-                <span className="project-form-label">Email</span>
+                <span className="project-form-label">Email *</span>
                 <input
                   name="email"
                   type="email"
                   autoComplete="email"
+                  required
                   maxLength={120}
                   aria-invalid={Boolean(fieldErrors.email)}
                   aria-describedby={fieldErrors.email ? "project-email-error" : undefined}

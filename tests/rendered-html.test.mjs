@@ -82,7 +82,9 @@ test("validates project inquiry submissions on the server", async () => {
     message: "Проверьте выделенные поля.",
     errors: {
       name: "Укажите имя длиной от 2 до 80 символов.",
+      company: "Укажите название компании длиной от 2 до 120 символов.",
       phone: "Введите российский номер из 10 цифр после +7.",
+      email: "Проверьте адрес электронной почты.",
       message: "Опишите проект: от 10 до 3000 символов.",
     },
   });
@@ -129,6 +131,9 @@ test("keeps required public assets and production components", async () => {
   assert.match(consent, /accepted/);
   assert.match(consent, /rejected/);
   assert.match(contactRoute, /RATE_LIMIT_REQUESTS/);
+  assert.match(contactRoute, /sendEmailInBackground/);
+  assert.match(contactRoute, /"Заявка принята\.", 202/);
+  assert.match(contactRoute, /BACKGROUND_EMAIL_ATTEMPTS = 3/);
   assert.match(contactRoute, /secure: true/);
   assert.match(contactRoute, /minVersion: "TLSv1\.2"/);
   assert.match(contactRoute, /rejectUnauthorized: true/);
@@ -142,4 +147,6 @@ test("keeps required public assets and production components", async () => {
   assert.match(projectModal, /deleteContentForward/);
   assert.match(projectModal, /data-lenis-prevent-wheel/);
   assert.match(projectModal, /aria-invalid/);
+  assert.match(projectModal, /Компания \*/);
+  assert.match(projectModal, /Email \*/);
 });

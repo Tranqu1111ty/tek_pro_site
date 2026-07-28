@@ -1,10 +1,18 @@
-import nodemailer, { type Transporter } from "nodemailer";
+import nodemailer, {
+  type SendMailOptions,
+  type Transporter,
+} from "nodemailer";
 
 const MAX_BODY_SIZE = 16 * 1024;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_REQUESTS = 5;
 const MAX_TRACKED_IPS = 10_000;
+const MAX_PENDING_EMAILS = 100;
+const BACKGROUND_EMAIL_ATTEMPTS = 3;
+const BACKGROUND_EMAIL_RETRY_MS = 2_000;
 const requestsByIp = new Map<string, number[]>();
+let pendingEmailCount = 0;
+let transporter: Transporter | null = null;
 
 type ContactRequest = {
   name?: unknown;
@@ -18,8 +26,6 @@ type ContactRequest = {
 
 type ContactField = "name" | "company" | "phone" | "email" | "message" | "consent";
 type ContactErrors = Partial<Record<ContactField, string>>;
-
-let transporter: Transporter | null = null;
 
 function json(message: string, status: number, errors?: ContactErrors) {
   return Response.json(
@@ -144,6 +150,56 @@ function getTransporter() {
   return transporter;
 }
 
+function delay(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function sendEmailInBackground(mailer: Transporter, options: SendMailOptions) {
+  if (pendingEmailCount >= MAX_PENDING_EMAILS) return false;
+  pendingEmailCount += 1;
+
+  void (async () => {
+    try {
+      for (let attempt = 1; attempt <= BACKGROUND_EMAIL_ATTEMPTS; attempt += 1) {
+        const sendStartedAt = Date.now();
+
+        try {
+          const info = await mailer.sendMail(options);
+          console.info("Contact form email sent.", {
+            attempt,
+            durationMs: Date.now() - sendStartedAt,
+            messageId: info.messageId,
+          });
+          return;
+        } catch (error) {
+          const smtpError = error as {
+            code?: string;
+            responseCode?: number;
+            command?: string;
+            message?: string;
+          };
+          console.error("Contact form email attempt failed.", {
+            attempt,
+            durationMs: Date.now() - sendStartedAt,
+            code: smtpError.code,
+            responseCode: smtpError.responseCode,
+            command: smtpError.command,
+            message: smtpError.message,
+          });
+
+          if (attempt < BACKGROUND_EMAIL_ATTEMPTS) {
+            await delay(BACKGROUND_EMAIL_RETRY_MS * 2 ** (attempt - 1));
+          }
+        }
+      }
+    } finally {
+      pendingEmailCount -= 1;
+    }
+  })();
+
+  return true;
+}
+
 export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") || "";
   const contentLength = Number(request.headers.get("content-length") || "0");
@@ -198,15 +254,15 @@ export async function POST(request: Request) {
     errors.name = "Укажите имя длиной от 2 до 80 символов.";
   }
 
-  if (normalizedCompany.tooLong) {
-    errors.company = "Название компании не должно превышать 120 символов.";
+  if (company.length < 2 || normalizedCompany.tooLong) {
+    errors.company = "Укажите название компании длиной от 2 до 120 символов.";
   }
 
   if (phoneDigits.length !== 11 || !phoneDigits.startsWith("7")) {
     errors.phone = "Введите российский номер из 10 цифр после +7.";
   }
 
-  if (email && (normalizedEmail.tooLong || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+  if (!email || normalizedEmail.tooLong || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = "Проверьте адрес электронной почты.";
   }
 
@@ -239,58 +295,38 @@ export async function POST(request: Request) {
   const safeName = name.replace(/[\r\n]/g, " ");
   const text = [
     `Имя: ${name}`,
-    `Компания: ${company || "не указана"}`,
+    `Компания: ${company}`,
     `Телефон: ${phone}`,
-    `Email: ${email || "не указан"}`,
+    `Email: ${email}`,
     "",
     "Описание проекта:",
     message,
   ].join("\n");
-
   const html = `
     <h2>Новая заявка с tekpro.ru</h2>
     <p><strong>Имя:</strong> ${escapeHtml(name)}</p>
-    <p><strong>Компания:</strong> ${escapeHtml(company || "не указана")}</p>
+    <p><strong>Компания:</strong> ${escapeHtml(company)}</p>
     <p><strong>Телефон:</strong> ${escapeHtml(phone)}</p>
-    <p><strong>Email:</strong> ${escapeHtml(email || "не указан")}</p>
+    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
     <h3>Описание проекта</h3>
     <p>${escapeHtml(message).replaceAll("\n", "<br>")}</p>
   `;
+  const accepted = sendEmailInBackground(mailer, {
+    from: {
+      name: process.env.SMTP_FROM_NAME || "Сайт ТЭКПРО",
+      address: fromAddress,
+    },
+    to: toAddress,
+    replyTo: email,
+    subject: `[tekpro.ru] Новая заявка — ${safeName}`,
+    text,
+    html,
+  });
 
-  const sendStartedAt = Date.now();
-
-  try {
-    const info = await mailer.sendMail({
-      from: {
-        name: process.env.SMTP_FROM_NAME || "Сайт ТЭКПРО",
-        address: fromAddress,
-      },
-      to: toAddress,
-      replyTo: email || undefined,
-      subject: `[tekpro.ru] Новая заявка — ${safeName}`,
-      text,
-      html,
-    });
-    console.info("Contact form email sent.", {
-      durationMs: Date.now() - sendStartedAt,
-      messageId: info.messageId,
-    });
-  } catch (error) {
-    const smtpError = error as {
-      code?: string;
-      responseCode?: number;
-      command?: string;
-      message?: string;
-    };
-    console.error("Failed to send contact form email.", {
-      durationMs: Date.now() - sendStartedAt,
-      code: smtpError.code,
-      responseCode: smtpError.responseCode,
-      command: smtpError.command,
-      message: smtpError.message,
-    });
-    return json("Не удалось отправить заявку. Напишите нам на info@tekpro.ru.", 502);
+  if (!accepted) {
+    console.error("Contact form background email limit reached.");
+    return json("Форма временно недоступна. Напишите нам на info@tekpro.ru.", 503);
   }
 
-  return json("Заявка отправлена.", 200);
+  return json("Заявка принята.", 202);
 }
