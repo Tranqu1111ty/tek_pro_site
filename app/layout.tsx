@@ -3,9 +3,13 @@ import { CookieConsent } from "@/components/privacy/CookieConsent";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tekpro.ru"),
   title: "ТЭКПРО — комплексное проектирование и инженерные изыскания",
   description:
     "Инжиниринговая компания ТЭКПРО: полный цикл проектно-изыскательских работ, сопровождение проектов, корпоративные цифровые платформы, аналитические системы и решения на базе технологий искусственного интеллекта.",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

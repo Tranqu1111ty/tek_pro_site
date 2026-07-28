@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Политика использования файлов cookie — ТЭКПРО",
   description:
     "Информация об использовании файлов cookie и локального хранилища браузера на сайте ТЭКПРО.",
+  alternates: {
+    canonical: "/cookie-policy",
+  },
 };
 
 const purposes = [

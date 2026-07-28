@@ -11,11 +11,12 @@
 - Сервер: `217.112.43.150`
 - Системный пользователь: `tekprooo3`
 - Каталог приложения: `/opt/tekpro-site`
-- Публичный адрес: `https://217.112.43.150`
+- Публичный адрес: `https://tekpro.ru`
+- `https://www.tekpro.ru` перенаправляется на основной домен
 
-Для IP-адреса Caddy получает у Let's Encrypt публично доверенный сертификат
-профиля `shortlived`. Такой сертификат действует около шести дней и
-автоматически продлевается. Том `caddy_data` нельзя удалять.
+Caddy получает у Let's Encrypt публично доверенные сертификаты для
+`tekpro.ru` и `www.tekpro.ru` и автоматически продлевает их. Том
+`caddy_data` нельзя удалять.
 
 ## 1. Отправка конфигурации в GitHub
 
@@ -187,24 +188,26 @@ sudo docker compose ps
 sudo docker compose logs --tail=100 app caddy
 ```
 
-Caddy должен получить сертификат Let's Encrypt для `217.112.43.150`. Для
-первичного выпуска порт `80/tcp` должен быть доступен из интернета. Обычно
-сертификат появляется в течение нескольких секунд.
+Caddy должен получить сертификаты Let's Encrypt для `tekpro.ru` и
+`www.tekpro.ru`. Для первичного выпуска порт `80/tcp` должен быть доступен из
+интернета, а A-записи обоих имён должны указывать на `217.112.43.150`. Обычно
+сертификаты появляются в течение нескольких секунд.
 
 ## 7. Проверка сайта
 
 ```bash
-curl -I http://217.112.43.150
-curl -I https://217.112.43.150
-curl -I https://217.112.43.150/media/logo6.png
-curl -fsS https://217.112.43.150/ >/dev/null \
+curl -I http://tekpro.ru
+curl -I https://tekpro.ru
+curl -I https://www.tekpro.ru
+curl -I https://tekpro.ru/media/logo6.png
+curl -fsS https://tekpro.ru/ >/dev/null \
   && echo "Сайт работает"
 ```
 
 Открыть в браузере:
 
 ```text
-https://217.112.43.150
+https://tekpro.ru
 ```
 
 Проверить версию Caddy:
@@ -264,7 +267,7 @@ sudo docker compose up -d --no-deps --force-recreate caddy
 
 sudo docker compose ps
 sudo docker compose logs --tail=100 app caddy
-curl -fsS https://217.112.43.150/ >/dev/null \
+curl -fsS https://tekpro.ru/ >/dev/null \
   && echo "Обновление успешно"
 ```
 
@@ -307,33 +310,21 @@ sudo docker inspect "$(sudo docker compose ps -q app)" \
 sudo ss -lntup | grep -E ':(80|443)\b'
 sudo ufw status verbose
 sudo docker compose logs --tail=300 caddy
-curl -I http://217.112.43.150
+curl -I http://tekpro.ru
 ```
 
 Проверить, что порты `80/tcp`, `443/tcp` и `443/udp` также разрешены во
 внешнем firewall панели хостинг-провайдера, если он используется.
 
-## 12. Когда появится домен
+## 12. DNS
 
-Создать `A`-запись домена, указывающую на `217.112.43.150`, затем заменить
-адрес сайта в `Caddyfile`:
+Для домена должны быть настроены записи:
 
-```caddyfile
-example.ru {
-	encode zstd gzip
-
-	@public_assets path /favicon.svg /file.svg /globe.svg /window.svg /documents/* /fonts/* /media/*
-	handle @public_assets {
-		root * /srv/public
-		file_server
-	}
-
-	handle {
-		reverse_proxy app:3000
-	}
-}
+```text
+tekpro.ru      A  217.112.43.150
+www.tekpro.ru  A  217.112.43.150
 ```
 
-Специальный блок `tls` с профилем `shortlived` для обычного домена больше не
-нужен: Caddy автоматически выпустит и будет продлевать стандартный
-сертификат.
+AAAA-записи не следует добавлять, пока сервер не настроен и не проверен по
+IPv6. Caddy автоматически выпустит и будет продлевать стандартные сертификаты
+для обоих доменных имён.

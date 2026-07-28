@@ -1,16 +1,4 @@
-{
-	default_sni 217.112.43.150
-}
-
-217.112.43.150 {
-	tls {
-		issuer acme {
-			dir https://acme-v02.api.letsencrypt.org/directory
-			profile shortlived
-			disable_tlsalpn_challenge
-		}
-	}
-
+tekpro.ru {
 	encode zstd gzip
 
 	header {
@@ -34,4 +22,12 @@
 		output stdout
 		format json
 	}
+}
+
+www.tekpro.ru {
+	redir https://tekpro.ru{uri} permanent
+}
+
+http://217.112.43.150 {
+	redir https://tekpro.ru{uri} permanent
 }

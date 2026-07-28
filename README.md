@@ -72,14 +72,16 @@ docker compose logs --tail=200 app caddy
 ```
 
 Текущая конфигурация публикует сайт по адресу
-[`https://217.112.43.150`](https://217.112.43.150). Caddy автоматически
-получает и продлевает сертификат Let's Encrypt для IP-адреса.
+[`https://tekpro.ru`](https://tekpro.ru). Caddy автоматически получает и
+продлевает сертификаты Let's Encrypt для `tekpro.ru` и `www.tekpro.ru`, а
+запросы к `www` перенаправляет на основной домен.
 
 Проверка доступности:
 
 ```bash
-curl -I https://217.112.43.150
-curl -I https://217.112.43.150/media/logo6.png
+curl -I https://tekpro.ru
+curl -I https://www.tekpro.ru
+curl -I https://tekpro.ru/media/logo6.png
 ```
 
 ### Обновление
