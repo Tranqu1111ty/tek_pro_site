@@ -2,6 +2,8 @@ import nodemailer, {
   type SendMailOptions,
   type Transporter,
 } from "nodemailer";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 const MAX_BODY_SIZE = 16 * 1024;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -13,6 +15,7 @@ const BACKGROUND_EMAIL_RETRY_MS = 2_000;
 const requestsByIp = new Map<string, number[]>();
 let pendingEmailCount = 0;
 let transporter: Transporter | null = null;
+let emailLogoContentPromise: Promise<Buffer> | null = null;
 
 type ContactRequest = {
   name?: unknown;
@@ -73,6 +76,13 @@ function escapeHtml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function getEmailLogoContent() {
+  emailLogoContentPromise ??= readFile(
+    join(process.cwd(), "public", "media", "brand", "tekpro-logo-email.png"),
+  );
+  return emailLogoContentPromise;
 }
 
 function getClientIp(request: Request) {
@@ -303,14 +313,116 @@ export async function POST(request: Request) {
     message,
   ].join("\n");
   const html = `
-    <h2>Новая заявка с tekpro.ru</h2>
-    <p><strong>Имя:</strong> ${escapeHtml(name)}</p>
-    <p><strong>Компания:</strong> ${escapeHtml(company)}</p>
-    <p><strong>Телефон:</strong> ${escapeHtml(phone)}</p>
-    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-    <h3>Описание проекта</h3>
-    <p>${escapeHtml(message).replaceAll("\n", "<br>")}</p>
+    <!doctype html>
+    <html lang="ru">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Новая заявка с tekpro.ru</title>
+      </head>
+      <body style="margin:0; padding:0; background:#edf1f4; color:#061426;">
+        <div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+          Новая заявка от ${escapeHtml(name)} — ${escapeHtml(company)}
+        </div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; background:#edf1f4;">
+          <tr>
+            <td align="center" style="padding:32px 16px;">
+              <table role="presentation" width="640" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:640px; overflow:hidden; border:1px solid #d9e0e6; border-radius:12px; background:#ffffff;">
+                <tr>
+                  <td style="padding:26px 32px; background:#061426;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td>
+                          <img
+                            src="cid:tekpro-logo-email@tekpro.ru"
+                            width="246"
+                            height="27"
+                            alt="ТЭКПРО"
+                            style="display:block; width:246px; max-width:100%; height:auto; border:0;"
+                          >
+                        </td>
+                        <td align="right" style="font-family:Arial,Helvetica,sans-serif; font-size:14px;">
+                          <a href="https://tekpro.ru" style="color:#bfcfe0; text-decoration:none;">tekpro.ru</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:34px 32px 36px;">
+                    <h1 style="margin:0; color:#061426; font-family:Arial,Helvetica,sans-serif; font-size:28px; font-weight:500; line-height:1.2;">
+                      Новая заявка
+                    </h1>
+                    <p style="margin:10px 0 0; color:#5b6b7e; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:1.55;">
+                      Клиент оставил контакты и описание проекта через форму на сайте.
+                    </p>
+
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%; margin-top:28px; border-top:1px solid #dfe5ea;">
+                      <tr>
+                        <td width="132" valign="top" style="padding:15px 16px 15px 0; border-bottom:1px solid #dfe5ea; color:#6b7888; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.5;">
+                          Имя
+                        </td>
+                        <td valign="top" style="padding:15px 0; border-bottom:1px solid #dfe5ea; color:#061426; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:600; line-height:1.5; overflow-wrap:anywhere;">
+                          ${escapeHtml(name)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="132" valign="top" style="padding:15px 16px 15px 0; border-bottom:1px solid #dfe5ea; color:#6b7888; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.5;">
+                          Компания
+                        </td>
+                        <td valign="top" style="padding:15px 0; border-bottom:1px solid #dfe5ea; color:#061426; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:600; line-height:1.5; overflow-wrap:anywhere;">
+                          ${escapeHtml(company)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="132" valign="top" style="padding:15px 16px 15px 0; border-bottom:1px solid #dfe5ea; color:#6b7888; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.5;">
+                          Телефон
+                        </td>
+                        <td valign="top" style="padding:15px 0; border-bottom:1px solid #dfe5ea; color:#061426; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:600; line-height:1.5;">
+                          <a href="tel:+${phoneDigits}" style="color:#061426; text-decoration:none;">${escapeHtml(phone)}</a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td width="132" valign="top" style="padding:15px 16px 15px 0; border-bottom:1px solid #dfe5ea; color:#6b7888; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.5;">
+                          Email
+                        </td>
+                        <td valign="top" style="padding:15px 0; border-bottom:1px solid #dfe5ea; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:600; line-height:1.5; overflow-wrap:anywhere;">
+                          <a href="mailto:${escapeHtml(email)}" style="color:#1f5f99; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px;">${escapeHtml(email)}</a>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <h2 style="margin:30px 0 12px; color:#061426; font-family:Arial,Helvetica,sans-serif; font-size:18px; font-weight:600; line-height:1.35;">
+                      О проекте
+                    </h2>
+                    <div style="padding:20px 22px; border-radius:8px; background:#f3f6f8;">
+                      <p style="margin:0; color:#27384c; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:1.65; overflow-wrap:anywhere;">
+                        ${escapeHtml(message).replaceAll("\n", "<br>")}
+                      </p>
+                    </div>
+
+                    <p style="margin:26px 0 0; color:#738091; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:1.55;">
+                      Это письмо было отправлено автоматически, не отвечайте на него. <br>Чтобы связаться с клиентом - напишите на указанный в графе адрес почты.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
   `;
+  let emailLogoContent: Buffer;
+  try {
+    emailLogoContent = await getEmailLogoContent();
+  } catch (error) {
+    console.error("Contact form email logo is unavailable.", {
+      message: error instanceof Error ? error.message : "Unknown file error",
+    });
+    return json("Форма временно недоступна. Напишите нам на info@tekpro.ru.", 503);
+  }
+
   const accepted = sendEmailInBackground(mailer, {
     from: {
       name: process.env.SMTP_FROM_NAME || "Сайт ТЭКПРО",
@@ -318,9 +430,18 @@ export async function POST(request: Request) {
     },
     to: toAddress,
     replyTo: email,
-    subject: `[tekpro.ru] Новая заявка — ${safeName}`,
+    subject: `[tekpro.ru] Новая обращение — ${safeName}`,
     text,
     html,
+    attachments: [
+      {
+        filename: "tekpro-logo-email.png",
+        content: emailLogoContent,
+        contentType: "image/png",
+        contentDisposition: "inline",
+        cid: "tekpro-logo-email@tekpro.ru",
+      },
+    ],
   });
 
   if (!accepted) {

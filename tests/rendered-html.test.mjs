@@ -108,6 +108,7 @@ test("keeps required public assets and production components", async () => {
     "../public/media/video_loop.mp4",
     "../public/media/logo6.png",
     "../public/media/sertificate.jpg",
+    "../public/media/brand/tekpro-logo-email.png",
     "../public/documents/ptekpropd.pdf",
     "../components/cinematic/CinematicHero.tsx",
     "../components/ui/sticky-scroll.tsx",
@@ -116,12 +117,13 @@ test("keeps required public assets and production components", async () => {
 
   await Promise.all(requiredFiles.map((file) => access(new URL(file, import.meta.url))));
 
-  const [page, footer, consent, contactRoute, projectModal] = await Promise.all([
+  const [page, footer, consent, contactRoute, projectModal, caddyfile] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/layout/Footer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/privacy/CookieConsent.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/contact/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../components/contact/ProjectInquiryModal.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../Caddyfile", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /<StickyScrollGallery/);
@@ -141,6 +143,19 @@ test("keeps required public assets and production components", async () => {
   assert.match(contactRoute, /pool: true/);
   assert.match(contactRoute, /connectionTimeout: 8_000/);
   assert.match(contactRoute, /escapeHtml\(message\)/);
+  assert.match(contactRoute, /role="presentation"/);
+  assert.match(contactRoute, /Чтобы связаться с клиентом/);
+  assert.match(contactRoute, /href="mailto:\$\{escapeHtml\(email\)\}"/);
+  assert.match(
+    contactRoute,
+    /src="cid:tekpro-logo-email@tekpro\.ru"/,
+  );
+  assert.match(contactRoute, /alt="ТЭКПРО"/);
+  assert.match(contactRoute, /contentDisposition: "inline"/);
+  assert.match(contactRoute, /cid: "tekpro-logo-email@tekpro\.ru"/);
+  assert.match(contactRoute, /getEmailLogoContent/);
+  assert.doesNotMatch(contactRoute, /border-left:3px/);
+  assert.match(caddyfile, /\/media\/\*/);
   assert.match(projectModal, /fetch\("\/api\/contact"/);
   assert.match(projectModal, /formatRussianPhone/);
   assert.match(projectModal, /deleteContentBackward/);
