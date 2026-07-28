@@ -79,7 +79,25 @@ test("validates project inquiry submissions on the server", async () => {
 
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), {
-    message: "Заполните обязательные поля формы.",
+    message: "Проверьте выделенные поля.",
+    errors: {
+      name: "Укажите имя длиной от 2 до 80 символов.",
+      phone: "Введите российский номер из 10 цифр после +7.",
+      message: "Опишите проект: от 10 до 3000 символов.",
+    },
+  });
+});
+
+test("rejects non-object contact payloads", async () => {
+  const response = await fetch(`${origin}/api/contact`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "null",
+  });
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    message: "Некорректный формат заявки.",
   });
 });
 
@@ -115,5 +133,13 @@ test("keeps required public assets and production components", async () => {
   assert.match(contactRoute, /minVersion: "TLSv1\.2"/);
   assert.match(contactRoute, /rejectUnauthorized: true/);
   assert.match(contactRoute, /disableFileAccess: true/);
+  assert.match(contactRoute, /pool: true/);
+  assert.match(contactRoute, /connectionTimeout: 8_000/);
+  assert.match(contactRoute, /escapeHtml\(message\)/);
   assert.match(projectModal, /fetch\("\/api\/contact"/);
+  assert.match(projectModal, /formatRussianPhone/);
+  assert.match(projectModal, /deleteContentBackward/);
+  assert.match(projectModal, /deleteContentForward/);
+  assert.match(projectModal, /data-lenis-prevent-wheel/);
+  assert.match(projectModal, /aria-invalid/);
 });

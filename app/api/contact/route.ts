@@ -16,11 +16,14 @@ type ContactRequest = {
   website?: unknown;
 };
 
+type ContactField = "name" | "company" | "phone" | "email" | "message" | "consent";
+type ContactErrors = Partial<Record<ContactField, string>>;
+
 let transporter: Transporter | null = null;
 
-function json(message: string, status: number) {
+function json(message: string, status: number, errors?: ContactErrors) {
   return Response.json(
-    { message },
+    { message, ...(errors ? { errors } : {}) },
     {
       status,
       headers: {
@@ -30,8 +33,31 @@ function json(message: string, status: number) {
   );
 }
 
-function stringField(value: unknown, maxLength: number) {
-  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+function normalizeText(value: unknown, maxLength: number, multiline = false) {
+  if (typeof value !== "string") {
+    return { value: "", tooLong: false };
+  }
+
+  const normalized = value.normalize("NFKC");
+  const sanitized = Array.from(normalized)
+    .filter((character) => {
+      const codePoint = character.codePointAt(0) ?? 0;
+      const isBidiControl =
+        (codePoint >= 0x202a && codePoint <= 0x202e) ||
+        (codePoint >= 0x2066 && codePoint <= 0x2069);
+      const isAllowedMultilineWhitespace =
+        multiline && (codePoint === 0x09 || codePoint === 0x0a || codePoint === 0x0d);
+      const isControl = (codePoint <= 0x1f || codePoint === 0x7f) && !isAllowedMultilineWhitespace;
+
+      return !isControl && !isBidiControl;
+    })
+    .join("")
+    .trim();
+
+  return {
+    value: sanitized.slice(0, maxLength),
+    tooLong: sanitized.length > maxLength,
+  };
 }
 
 function escapeHtml(value: string) {
@@ -93,9 +119,16 @@ function getTransporter() {
   }
 
   transporter = nodemailer.createTransport({
+    pool: true,
+    maxConnections: 2,
+    maxMessages: 50,
     host,
     port,
     secure: true,
+    name: "tekpro.ru",
+    connectionTimeout: 8_000,
+    greetingTimeout: 5_000,
+    socketTimeout: 15_000,
     auth: {
       user,
       pass: password,
@@ -130,36 +163,63 @@ export async function POST(request: Request) {
     if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_SIZE) {
       return json("Размер заявки превышает допустимый.", 413);
     }
-    payload = JSON.parse(rawBody) as ContactRequest;
+    const parsedPayload = JSON.parse(rawBody) as unknown;
+    if (
+      !parsedPayload ||
+      typeof parsedPayload !== "object" ||
+      Array.isArray(parsedPayload)
+    ) {
+      return json("Некорректный формат заявки.", 400);
+    }
+    payload = parsedPayload as ContactRequest;
   } catch {
     return json("Некорректный формат заявки.", 400);
   }
 
-  const website = stringField(payload.website, 200);
+  const website = normalizeText(payload.website, 200).value;
   if (website) {
     return json("Заявка отправлена.", 200);
   }
 
-  const name = stringField(payload.name, 80);
-  const company = stringField(payload.company, 120);
-  const phone = stringField(payload.phone, 32);
-  const email = stringField(payload.email, 120).toLowerCase();
-  const message = stringField(payload.message, 3000);
+  const normalizedName = normalizeText(payload.name, 80);
+  const normalizedCompany = normalizeText(payload.company, 120);
+  const normalizedPhone = normalizeText(payload.phone, 32);
+  const normalizedEmail = normalizeText(payload.email, 120);
+  const normalizedMessage = normalizeText(payload.message, 3000, true);
+  const name = normalizedName.value;
+  const company = normalizedCompany.value;
+  const phone = normalizedPhone.value;
+  const email = normalizedEmail.value.toLowerCase();
+  const message = normalizedMessage.value;
+  const phoneDigits = phone.replace(/\D/g, "");
+  const errors: ContactErrors = {};
 
-  if (name.length < 2 || phone.length < 7 || message.length < 10) {
-    return json("Заполните обязательные поля формы.", 400);
+  if (name.length < 2 || normalizedName.tooLong) {
+    errors.name = "Укажите имя длиной от 2 до 80 символов.";
   }
 
-  if (!/^[+\d][\d\s()+-]{5,30}\d$/.test(phone)) {
-    return json("Проверьте номер телефона.", 400);
+  if (normalizedCompany.tooLong) {
+    errors.company = "Название компании не должно превышать 120 символов.";
   }
 
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return json("Проверьте адрес электронной почты.", 400);
+  if (phoneDigits.length !== 11 || !phoneDigits.startsWith("7")) {
+    errors.phone = "Введите российский номер из 10 цифр после +7.";
+  }
+
+  if (email && (normalizedEmail.tooLong || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+    errors.email = "Проверьте адрес электронной почты.";
+  }
+
+  if (message.length < 10 || normalizedMessage.tooLong) {
+    errors.message = "Опишите проект: от 10 до 3000 символов.";
   }
 
   if (payload.consent !== "accepted") {
-    return json("Необходимо согласие на обработку персональных данных.", 400);
+    errors.consent = "Подтвердите согласие на обработку персональных данных.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return json("Проверьте выделенные поля.", 400, errors);
   }
 
   const clientIp = getClientIp(request);
@@ -197,8 +257,10 @@ export async function POST(request: Request) {
     <p>${escapeHtml(message).replaceAll("\n", "<br>")}</p>
   `;
 
+  const sendStartedAt = Date.now();
+
   try {
-    await mailer.sendMail({
+    const info = await mailer.sendMail({
       from: {
         name: process.env.SMTP_FROM_NAME || "Сайт ТЭКПРО",
         address: fromAddress,
@@ -209,8 +271,24 @@ export async function POST(request: Request) {
       text,
       html,
     });
+    console.info("Contact form email sent.", {
+      durationMs: Date.now() - sendStartedAt,
+      messageId: info.messageId,
+    });
   } catch (error) {
-    console.error("Failed to send contact form email.", error);
+    const smtpError = error as {
+      code?: string;
+      responseCode?: number;
+      command?: string;
+      message?: string;
+    };
+    console.error("Failed to send contact form email.", {
+      durationMs: Date.now() - sendStartedAt,
+      code: smtpError.code,
+      responseCode: smtpError.responseCode,
+      command: smtpError.command,
+      message: smtpError.message,
+    });
     return json("Не удалось отправить заявку. Напишите нам на info@tekpro.ru.", 502);
   }
 
