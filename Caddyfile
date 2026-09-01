@@ -24,6 +24,9 @@ tekpro.ru {
 	import security_headers
 
 	route {
+		@legacy_pages path /cgi-bin/*
+		redir @legacy_pages https://tekpro.ru/ permanent
+
 		@contact_api {
 			path /api/contact
 			method POST
@@ -59,6 +62,8 @@ tekpro.ru {
 
 www.tekpro.ru {
 	import security_headers
+	@legacy_pages path /cgi-bin/*
+	redir @legacy_pages https://tekpro.ru/ permanent
 	redir https://tekpro.ru{uri} permanent
 }
 

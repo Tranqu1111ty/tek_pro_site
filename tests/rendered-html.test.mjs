@@ -42,6 +42,14 @@ test("server-renders the TEKPRO corporate site", async () => {
   const html = await response.text();
   assert.match(html, /<html lang="ru">/i);
   assert.match(html, /<title>ТЭКПРО — комплексное проектирование и инженерные изыскания<\/title>/i);
+  assert.match(html, /<meta name="description" content="ТЭКПРО — инжиниринговая компания/);
+  assert.match(html, /<meta property="og:site_name" content="ТЭКПРО"/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/tekpro\.ru\/media\/company-cycle\.png"/);
+  assert.match(html, /<meta name="twitter:card" content="summary_large_image"/);
+  assert.match(html, /application\/ld\+json/);
+  assert.match(html, /https:\/\/schema\.org/);
+  assert.match(html, /"@type":"Organization"/);
+  assert.match(html, /"@type":"WebSite"/);
   assert.match(html, /Полный цикл/);
   assert.match(html, /Промышленные процессы/);
   assert.match(html, /Лаборатория механики грунтов/);
@@ -63,6 +71,24 @@ test("server-renders the cookie policy", async () => {
   assert.match(html, /локального хранилища/);
   assert.match(html, /сторонние сервисы веб-аналитики/i);
   assert.match(html, /23 июля 2026 года/);
+});
+
+test("serves crawl directives and the canonical sitemap", async () => {
+  const robotsResponse = await fetch(`${origin}/robots.txt`);
+  assert.equal(robotsResponse.status, 200);
+  assert.match(robotsResponse.headers.get("content-type") ?? "", /^text\/plain\b/i);
+  const robots = await robotsResponse.text();
+  assert.match(robots, /User-Agent: \*/i);
+  assert.match(robots, /Allow: \//i);
+  assert.match(robots, /Disallow: \/api\//i);
+  assert.match(robots, /Sitemap: https:\/\/tekpro\.ru\/sitemap\.xml/i);
+
+  const sitemapResponse = await fetch(`${origin}/sitemap.xml`);
+  assert.equal(sitemapResponse.status, 200);
+  assert.match(sitemapResponse.headers.get("content-type") ?? "", /application\/xml/i);
+  const sitemap = await sitemapResponse.text();
+  assert.match(sitemap, /<loc>https:\/\/tekpro\.ru\/<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/tekpro\.ru\/cookie-policy<\/loc>/);
 });
 
 test("validates project inquiry submissions on the server", async () => {
@@ -118,6 +144,8 @@ test("keeps required public assets and production components", async () => {
     "../components/cinematic/CinematicHero.tsx",
     "../components/ui/sticky-scroll.tsx",
     "../components/ui/dynamic-wave-canvas-background.tsx",
+    "../app/robots.ts",
+    "../app/sitemap.ts",
   ];
 
   await Promise.all(requiredFiles.map((file) => access(new URL(file, import.meta.url))));
@@ -167,6 +195,8 @@ test("keeps required public assets and production components", async () => {
   assert.match(caddyfile, /\/media\/\*/);
   assert.match(caddyfile, /\/media\/hero\/\*/);
   assert.match(caddyfile, /max-age=31536000, immutable/);
+  assert.match(caddyfile, /@legacy_pages path \/cgi-bin\/\*/);
+  assert.match(caddyfile, /redir @legacy_pages https:\/\/tekpro\.ru\/ permanent/);
   assert.match(cinematicHero, /scene-1-desktop-v1\.mp4/);
   assert.match(cinematicHero, /scene-3-desktop-v3\.mp4/);
   assert.match(cinematicHero, /scene-3-mobile-v3\.mp4/);
