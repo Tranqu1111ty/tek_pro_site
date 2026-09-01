@@ -32,6 +32,8 @@ const STAGE_END_TIMES = [
 ] as const;
 const INTRO_REVEAL_PORTION = 0.05;
 const MIN_FULL_HERO_SCROLL_DURATION_MS = 7_000;
+const STAGE_BOUNDARY_TOLERANCE = 0.01;
+const HERO_EXIT_SCROLL_DURATION_MS = 900;
 
 function clamp(value: number, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -42,10 +44,15 @@ function locateStage(timelineTime: number) {
 
   for (let stageIndex = 0; stageIndex < STAGE_END_TIMES.length; stageIndex += 1) {
     const stageEnd = STAGE_END_TIMES[stageIndex];
-    if (timelineTime < stageEnd || stageIndex === STAGE_END_TIMES.length - 1) {
+    if (
+      timelineTime <= stageEnd + STAGE_BOUNDARY_TOLERANCE ||
+      stageIndex === STAGE_END_TIMES.length - 1
+    ) {
+      const stageProgress = clamp((timelineTime - stageStart) / (stageEnd - stageStart));
       return {
         stageIndex,
-        stageProgress: clamp((timelineTime - stageStart) / (stageEnd - stageStart)),
+        stageProgress:
+          stageEnd - timelineTime <= STAGE_BOUNDARY_TOLERANCE ? 1 : stageProgress,
       };
     }
     stageStart = stageEnd;
@@ -84,7 +91,12 @@ export function CinematicHero() {
 
     let animationFrame = 0;
     let wheelAnimationFrame = 0;
+    let wheelGestureReleaseTimer = 0;
+    let wheelGestureLocked = false;
     let wheelTarget = window.scrollY;
+    let wheelAnimationMode: "stage" | "exit" | "enter" | "release" = "stage";
+    let exitStartScroll = 0;
+    let exitStartTime = 0;
     let lastWheelFrameTime = 0;
     let previousScrollBehavior = "";
     let sectionStart = 0;
@@ -111,14 +123,54 @@ export function CinematicHero() {
     };
 
     const stopWheelAnimation = () => {
+      const completedMode = wheelAnimationMode;
       if (wheelAnimationFrame) window.cancelAnimationFrame(wheelAnimationFrame);
       wheelAnimationFrame = 0;
       lastWheelFrameTime = 0;
+      exitStartTime = 0;
       document.documentElement.style.scrollBehavior = previousScrollBehavior;
+      if (completedMode === "exit" && window.scrollY > sectionEnd + 1) {
+        section.removeAttribute("data-lenis-prevent-wheel");
+      }
+      const nextSection = document.getElementById("about");
+      const nextSectionTop = nextSection?.offsetTop ?? sectionEnd + window.innerHeight;
+      if (completedMode === "enter") {
+        nextSection?.removeAttribute("data-lenis-prevent-wheel");
+      } else if (completedMode === "exit") {
+        nextSection?.setAttribute("data-lenis-prevent-wheel", "");
+      } else if (completedMode === "release" && window.scrollY > nextSectionTop + 1) {
+        nextSection?.removeAttribute("data-lenis-prevent-wheel");
+      }
+      wheelAnimationMode = "stage";
     };
 
     const animateWheelScroll = (frameTime: number) => {
       const currentScroll = window.scrollY;
+
+      if (
+        wheelAnimationMode === "exit" ||
+        wheelAnimationMode === "enter" ||
+        wheelAnimationMode === "release"
+      ) {
+        if (!exitStartTime) exitStartTime = frameTime;
+        const progress = clamp(
+          (frameTime - exitStartTime) / HERO_EXIT_SCROLL_DURATION_MS,
+        );
+        const easedProgress = 1 - (1 - progress) ** 3;
+        window.scrollTo(
+          0,
+          exitStartScroll + (wheelTarget - exitStartScroll) * easedProgress,
+        );
+
+        if (progress >= 1) {
+          stopWheelAnimation();
+          return;
+        }
+
+        wheelAnimationFrame = window.requestAnimationFrame(animateWheelScroll);
+        return;
+      }
+
       const distance = wheelTarget - currentScroll;
 
       if (Math.abs(distance) <= 0.5) {
@@ -152,31 +204,107 @@ export function CinematicHero() {
 
     const handleWheel = (event: WheelEvent) => {
       if (reduceMotion || event.ctrlKey) return;
+      const nextSection = document.getElementById("about");
       const preventedWheelContainer = event.target instanceof Element
         ? event.target.closest("[data-lenis-prevent-wheel]")
         : null;
-      if (preventedWheelContainer && preventedWheelContainer !== section) return;
+      if (
+        preventedWheelContainer &&
+        preventedWheelContainer !== section &&
+        preventedWheelContainer !== nextSection
+      ) return;
+
+      const transitionIsActive =
+        wheelAnimationFrame !== 0 && wheelAnimationMode !== "stage";
+      if (transitionIsActive) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (wheelGestureReleaseTimer) window.clearTimeout(wheelGestureReleaseTimer);
+        wheelGestureLocked = true;
+        wheelGestureReleaseTimer = window.setTimeout(() => {
+          wheelGestureLocked = false;
+          wheelGestureReleaseTimer = 0;
+        }, 220);
+        return;
+      }
 
       const currentScroll = window.scrollY;
-      const insideHero = currentScroll >= sectionStart - 1 && currentScroll <= sectionEnd + 1;
-      if (!insideHero) return;
-
-      const deltaMultiplier = event.deltaMode === 1
-        ? 16
-        : event.deltaMode === 2
-          ? window.innerHeight
-          : 1;
-      const delta = event.deltaY * deltaMultiplier;
+      const delta = event.deltaY;
       if (Math.abs(delta) < 0.01) return;
+
+      const nextSectionTop = nextSection?.offsetTop ?? sectionEnd + window.innerHeight;
+      const insideHero = currentScroll >= sectionStart - 1 && currentScroll <= sectionEnd + 1;
+      const insideSectionBoundary =
+        currentScroll > sectionEnd + 1 && currentScroll <= nextSectionTop + 1;
+      const returningToHero = delta < 0 && insideSectionBoundary;
+      const continuingPastHero = delta > 0 && insideSectionBoundary;
+      if (!insideHero && !insideSectionBoundary) return;
 
       const atStart = currentScroll <= sectionStart + 0.5 && wheelTarget <= sectionStart + 0.5;
       const atEnd = currentScroll >= sectionEnd - 0.5 && wheelTarget >= sectionEnd - 0.5;
-      if ((delta < 0 && atStart) || (delta > 0 && atEnd)) return;
+      if (delta < 0 && atStart) return;
 
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (!wheelAnimationFrame) wheelTarget = clamp(currentScroll, sectionStart, sectionEnd);
-      wheelTarget = clamp(wheelTarget + delta, sectionStart, sectionEnd);
+
+      const startsNewGesture = !wheelGestureLocked;
+      wheelGestureLocked = true;
+      if (wheelGestureReleaseTimer) window.clearTimeout(wheelGestureReleaseTimer);
+      wheelGestureReleaseTimer = window.setTimeout(() => {
+        wheelGestureLocked = false;
+        wheelGestureReleaseTimer = 0;
+      }, 220);
+      if (!startsNewGesture || wheelAnimationFrame) return;
+
+      if (returningToHero) {
+        exitStartScroll = currentScroll;
+        wheelTarget = sectionEnd;
+        wheelAnimationMode = "enter";
+        section.setAttribute("data-lenis-prevent-wheel", "");
+        nextSection?.setAttribute("data-lenis-prevent-wheel", "");
+        startWheelAnimation();
+        return;
+      }
+
+      if (continuingPastHero) {
+        exitStartScroll = currentScroll;
+        if (currentScroll < nextSectionTop - 1) {
+          wheelTarget = nextSectionTop;
+          wheelAnimationMode = "exit";
+        } else {
+          wheelTarget = nextSectionTop + Math.min(window.innerHeight * 0.65, 520);
+          wheelAnimationMode = "release";
+        }
+        nextSection?.setAttribute("data-lenis-prevent-wheel", "");
+        startWheelAnimation();
+        return;
+      }
+
+      if (delta > 0 && atEnd) {
+        exitStartScroll = currentScroll;
+        wheelTarget = nextSectionTop;
+        wheelAnimationMode = "exit";
+        section.setAttribute("data-lenis-prevent-wheel", "");
+        nextSection?.setAttribute("data-lenis-prevent-wheel", "");
+        startWheelAnimation();
+        return;
+      }
+
+      const currentProgress = clamp(
+        (currentScroll - sectionStart) / (sectionEnd - sectionStart),
+      );
+      const currentTimelineTime = currentProgress * TOTAL_DURATION;
+      const targetTimelineTime = delta > 0
+        ? STAGE_END_TIMES.find(
+          (stageEnd) => stageEnd > currentTimelineTime + STAGE_BOUNDARY_TOLERANCE,
+        ) ?? TOTAL_DURATION
+        : [...STAGE_END_TIMES].reverse().find(
+          (stageEnd) => stageEnd < currentTimelineTime - STAGE_BOUNDARY_TOLERANCE,
+        ) ?? 0;
+
+      wheelTarget = sectionStart +
+        (targetTimelineTime / TOTAL_DURATION) * (sectionEnd - sectionStart);
+      wheelAnimationMode = "stage";
       startWheelAnimation();
     };
 
@@ -196,9 +324,26 @@ export function CinematicHero() {
 
     const update = () => {
       animationFrame = 0;
+      const currentScroll = window.scrollY;
+      const heroBounds = section.getBoundingClientRect();
+      const heroIsVisible = heroBounds.bottom > 0 && heroBounds.top < window.innerHeight;
+      const preventsLenisWheel = !reduceMotion && heroIsVisible;
+      section.toggleAttribute("data-lenis-prevent-wheel", preventsLenisWheel);
+      const nextSection = document.getElementById("about");
+      const nextSectionTop = nextSection?.offsetTop ?? sectionEnd + window.innerHeight;
+      const controlsSectionBoundary =
+        !reduceMotion &&
+        currentScroll > sectionEnd + 1 &&
+        currentScroll <= nextSectionTop + 1;
+      const transitionIsActive =
+        wheelAnimationFrame !== 0 && wheelAnimationMode !== "stage";
+      nextSection?.toggleAttribute(
+        "data-lenis-prevent-wheel",
+        controlsSectionBoundary || transitionIsActive,
+      );
       const stickyProgress = reduceMotion
         ? 0
-        : clamp((window.scrollY - sectionStart) / (sectionEnd - sectionStart));
+        : clamp((currentScroll - sectionStart) / (sectionEnd - sectionStart));
       const introProgress = reduceMotion
         ? 0
         : clamp(stickyProgress / INTRO_REVEAL_PORTION);
@@ -284,6 +429,7 @@ export function CinematicHero() {
     return () => {
       window.cancelAnimationFrame(animationFrame);
       stopWheelAnimation();
+      if (wheelGestureReleaseTimer) window.clearTimeout(wheelGestureReleaseTimer);
       resizeObserver.disconnect();
       window.removeEventListener("wheel", handleWheel, { capture: true });
       window.removeEventListener("scroll", scheduleUpdate);
@@ -292,6 +438,8 @@ export function CinematicHero() {
       video.removeEventListener("loadeddata", handleLoadedData);
       video.removeEventListener("seeked", handleSeeked);
       video.removeEventListener("error", handleVideoError);
+      section.removeAttribute("data-lenis-prevent-wheel");
+      document.getElementById("about")?.removeAttribute("data-lenis-prevent-wheel");
       clearVideo();
     };
   }, [reducedMotion, sourceMode]);
@@ -325,7 +473,6 @@ export function CinematicHero() {
         data-started={started}
         data-ready={bootReady}
         data-reduced-motion={reducedMotion}
-        data-lenis-prevent-wheel
       >
         <div className="cinematic-frame">
           <div className="cinematic-media-stack" aria-hidden="true">
