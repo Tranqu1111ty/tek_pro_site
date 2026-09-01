@@ -172,6 +172,7 @@ test("keeps required public assets and production components", async () => {
   assert.match(cinematicHero, /scene-3-mobile-v3\.mp4/);
   assert.match(cinematicHero, /duration: 8\.041667/);
   assert.match(cinematicHero, /duration: 6\.041667/);
+  assert.match(cinematicHero, /MODELING_STAGE_END = HERO_SCENES\[0\]\.duration \/ 2/);
   assert.match(cinematicHero, /PROJECT_STAGE_END = HERO_SCENES\[0\]\.duration/);
   assert.match(cinematicHero, /BUILD_STAGE_END = PREPARATION_STAGE_END \+ 3/);
   assert.match(cinematicHero, /timelineTime = stickyProgress \* TOTAL_DURATION/);

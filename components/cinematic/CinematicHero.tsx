@@ -33,11 +33,13 @@ const HERO_SCENES: readonly HeroScene[] = [
 ] as const;
 
 const TOTAL_DURATION = HERO_SCENES.reduce((total, scene) => total + scene.duration, 0);
+const MODELING_STAGE_END = HERO_SCENES[0].duration / 2;
 const PROJECT_STAGE_END = HERO_SCENES[0].duration;
 const RESEARCH_STAGE_END = PROJECT_STAGE_END + HERO_SCENES[1].duration / 2;
 const PREPARATION_STAGE_END = PROJECT_STAGE_END + HERO_SCENES[1].duration;
 const BUILD_STAGE_END = PREPARATION_STAGE_END + 3;
 const STAGE_END_TIMES = [
+  MODELING_STAGE_END,
   PROJECT_STAGE_END,
   RESEARCH_STAGE_END,
   PREPARATION_STAGE_END,
