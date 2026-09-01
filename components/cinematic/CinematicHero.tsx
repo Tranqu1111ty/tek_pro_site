@@ -16,6 +16,11 @@ type SourceMode = "desktop" | "mobile";
 
 const HERO_SCENES: readonly HeroScene[] = [
   {
+    desktopSrc: "/media/hero/scene-3-desktop-v3.mp4",
+    mobileSrc: "/media/hero/scene-3-mobile-v3.mp4",
+    duration: 4.041667,
+  },
+  {
     desktopSrc: "/media/hero/scene-1-desktop-v1.mp4",
     mobileSrc: "/media/hero/scene-1-mobile-v1.mp4",
     duration: 8.041667,
@@ -25,26 +30,20 @@ const HERO_SCENES: readonly HeroScene[] = [
     mobileSrc: "/media/hero/scene-2-mobile-v1.mp4",
     duration: 6.041667,
   },
-  {
-    desktopSrc: "/media/hero/scene-3-desktop-v2.mp4",
-    mobileSrc: "/media/hero/scene-3-mobile-v2.mp4",
-    duration: 2,
-  },
 ] as const;
 
 const TOTAL_DURATION = HERO_SCENES.reduce((total, scene) => total + scene.duration, 0);
-const FIRST_SCENE_FAST_STAGES_END = 5.5;
-const SECOND_SCENE_BUILD_STAGE_END = 3;
+const PROJECT_STAGE_END = HERO_SCENES[0].duration;
+const RESEARCH_STAGE_END = PROJECT_STAGE_END + HERO_SCENES[1].duration / 2;
+const PREPARATION_STAGE_END = PROJECT_STAGE_END + HERO_SCENES[1].duration;
+const BUILD_STAGE_END = PREPARATION_STAGE_END + 3;
 const STAGE_END_TIMES = [
-  FIRST_SCENE_FAST_STAGES_END / 3,
-  (FIRST_SCENE_FAST_STAGES_END / 3) * 2,
-  FIRST_SCENE_FAST_STAGES_END,
-  HERO_SCENES[0].duration + SECOND_SCENE_BUILD_STAGE_END,
-  HERO_SCENES[0].duration + HERO_SCENES[1].duration,
+  PROJECT_STAGE_END,
+  RESEARCH_STAGE_END,
+  PREPARATION_STAGE_END,
+  BUILD_STAGE_END,
   TOTAL_DURATION,
 ] as const;
-const FINAL_STAGE_START = STAGE_END_TIMES[STAGE_END_TIMES.length - 2];
-const HERO_STICKY_END_TIME = FINAL_STAGE_START + (TOTAL_DURATION - FINAL_STAGE_START) / 2;
 const INTRO_REVEAL_PORTION = 0.05;
 
 function clamp(value: number, minimum = 0, maximum = 1) {
@@ -218,17 +217,10 @@ export function CinematicHero() {
       const stickyProgress = reduceMotion
         ? 0
         : clamp((window.scrollY - sectionStart) / (sectionEnd - sectionStart));
-      const releasedProgress = reduceMotion
-        ? 0
-        : clamp((window.scrollY - sectionEnd) / window.innerHeight);
       const introProgress = reduceMotion
         ? 0
         : clamp(stickyProgress / INTRO_REVEAL_PORTION);
-      const timelineTime =
-        stickyProgress < 1
-          ? stickyProgress * HERO_STICKY_END_TIME
-          : HERO_STICKY_END_TIME +
-            releasedProgress * (TOTAL_DURATION - HERO_STICKY_END_TIME);
+      const timelineTime = stickyProgress * TOTAL_DURATION;
       const { index: sceneIndex, localTime } = locateScene(timelineTime);
       const scene = HERO_SCENES[sceneIndex];
       const { stageIndex, stageProgress } = locateStage(timelineTime);

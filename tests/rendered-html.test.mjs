@@ -109,8 +109,8 @@ test("keeps required public assets and production components", async () => {
     "../public/media/hero/scene-1-mobile-v1.mp4",
     "../public/media/hero/scene-2-desktop-v1.mp4",
     "../public/media/hero/scene-2-mobile-v1.mp4",
-    "../public/media/hero/scene-3-desktop-v2.mp4",
-    "../public/media/hero/scene-3-mobile-v2.mp4",
+    "../public/media/hero/scene-3-desktop-v3.mp4",
+    "../public/media/hero/scene-3-mobile-v3.mp4",
     "../public/media/logo6.png",
     "../public/media/sertificate.jpg",
     "../public/media/brand/tekpro-logo-email.png",
@@ -168,17 +168,18 @@ test("keeps required public assets and production components", async () => {
   assert.match(caddyfile, /\/media\/hero\/\*/);
   assert.match(caddyfile, /max-age=31536000, immutable/);
   assert.match(cinematicHero, /scene-1-desktop-v1\.mp4/);
-  assert.match(cinematicHero, /scene-3-mobile-v2\.mp4/);
+  assert.match(cinematicHero, /scene-3-desktop-v3\.mp4/);
+  assert.match(cinematicHero, /scene-3-mobile-v3\.mp4/);
   assert.match(cinematicHero, /duration: 8\.041667/);
   assert.match(cinematicHero, /duration: 6\.041667/);
-  assert.match(cinematicHero, /FIRST_SCENE_FAST_STAGES_END = 5\.5/);
-  assert.match(cinematicHero, /SECOND_SCENE_BUILD_STAGE_END = 3/);
-  assert.match(cinematicHero, /HERO_STICKY_END_TIME/);
-  assert.match(cinematicHero, /releasedProgress/);
+  assert.match(cinematicHero, /PROJECT_STAGE_END = HERO_SCENES\[0\]\.duration/);
+  assert.match(cinematicHero, /BUILD_STAGE_END = PREPARATION_STAGE_END \+ 3/);
+  assert.match(cinematicHero, /timelineTime = stickyProgress \* TOTAL_DURATION/);
+  assert.doesNotMatch(cinematicHero, /HERO_STICKY_END_TIME|releasedProgress/);
   assert.match(cinematicHero, /locateStage\(timelineTime\)/);
   assert.doesNotMatch(cinematicHero, /hero-post-translate/);
   assert.doesNotMatch(cinematicHero, /stageIndexes/);
-  assert.doesNotMatch(cinematicHero, /scene-3-(?:desktop|mobile)-v1\.mp4/);
+  assert.doesNotMatch(cinematicHero, /scene-3-(?:desktop|mobile)-v[12]\.mp4/);
   assert.doesNotMatch(cinematicHero, /Моделируем/);
   assert.match(cinematicHero, /site-loading-screen/);
   assert.match(cinematicHero, /video\.seeking/);
