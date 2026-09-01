@@ -206,6 +206,11 @@ test("keeps required public assets and production components", async () => {
   assert.match(cinematicHero, /BUILD_STAGE_END = PREPARATION_STAGE_END \+ 3/);
   assert.match(cinematicHero, /timelineTime = stickyProgress \* TOTAL_DURATION/);
   assert.match(cinematicHero, /targetTimeRef\.current = timelineTime/);
+  assert.match(cinematicHero, /MIN_FULL_HERO_SCROLL_DURATION_MS = 7_000/);
+  assert.match(cinematicHero, /maximumPixelsPerMillisecond/);
+  assert.match(cinematicHero, /window\.addEventListener\("wheel", handleWheel, \{ passive: false, capture: true \}\)/);
+  assert.match(cinematicHero, /event\.stopImmediatePropagation\(\)/);
+  assert.match(cinematicHero, /data-lenis-prevent-wheel/);
   assert.match(cinematicHero, /ref=\{videoRef\}/);
   assert.doesNotMatch(cinematicHero, /HERO_SCENES|locateScene|assignSceneToSlot|slotScenesRef/);
   assert.doesNotMatch(cinematicHero, /HERO_STICKY_END_TIME|releasedProgress/);

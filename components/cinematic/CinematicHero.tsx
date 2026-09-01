@@ -31,6 +31,7 @@ const STAGE_END_TIMES = [
   TOTAL_DURATION,
 ] as const;
 const INTRO_REVEAL_PORTION = 0.05;
+const MIN_FULL_HERO_SCROLL_DURATION_MS = 7_000;
 
 function clamp(value: number, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -82,6 +83,10 @@ export function CinematicHero() {
       reducedMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let animationFrame = 0;
+    let wheelAnimationFrame = 0;
+    let wheelTarget = window.scrollY;
+    let lastWheelFrameTime = 0;
+    let previousScrollBehavior = "";
     let sectionStart = 0;
     let sectionEnd = 1;
     let lastStarted = false;
@@ -102,6 +107,77 @@ export function CinematicHero() {
         sectionStart + 1,
         sectionTop + section.offsetHeight - window.innerHeight,
       );
+      if (!wheelAnimationFrame) wheelTarget = clamp(window.scrollY, sectionStart, sectionEnd);
+    };
+
+    const stopWheelAnimation = () => {
+      if (wheelAnimationFrame) window.cancelAnimationFrame(wheelAnimationFrame);
+      wheelAnimationFrame = 0;
+      lastWheelFrameTime = 0;
+      document.documentElement.style.scrollBehavior = previousScrollBehavior;
+    };
+
+    const animateWheelScroll = (frameTime: number) => {
+      const currentScroll = window.scrollY;
+      const distance = wheelTarget - currentScroll;
+
+      if (Math.abs(distance) <= 0.5) {
+        window.scrollTo(0, wheelTarget);
+        stopWheelAnimation();
+        return;
+      }
+
+      const elapsed = lastWheelFrameTime
+        ? Math.min(frameTime - lastWheelFrameTime, 100)
+        : 16;
+      lastWheelFrameTime = frameTime;
+      const maximumPixelsPerMillisecond =
+        (sectionEnd - sectionStart) / MIN_FULL_HERO_SCROLL_DURATION_MS;
+      const step = Math.sign(distance) * Math.min(
+        Math.abs(distance),
+        maximumPixelsPerMillisecond * elapsed,
+      );
+
+      window.scrollTo(0, currentScroll + step);
+      wheelAnimationFrame = window.requestAnimationFrame(animateWheelScroll);
+    };
+
+    const startWheelAnimation = () => {
+      if (wheelAnimationFrame) return;
+      previousScrollBehavior = document.documentElement.style.scrollBehavior;
+      document.documentElement.style.scrollBehavior = "auto";
+      lastWheelFrameTime = 0;
+      wheelAnimationFrame = window.requestAnimationFrame(animateWheelScroll);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      if (reduceMotion || event.ctrlKey) return;
+      const preventedWheelContainer = event.target instanceof Element
+        ? event.target.closest("[data-lenis-prevent-wheel]")
+        : null;
+      if (preventedWheelContainer && preventedWheelContainer !== section) return;
+
+      const currentScroll = window.scrollY;
+      const insideHero = currentScroll >= sectionStart - 1 && currentScroll <= sectionEnd + 1;
+      if (!insideHero) return;
+
+      const deltaMultiplier = event.deltaMode === 1
+        ? 16
+        : event.deltaMode === 2
+          ? window.innerHeight
+          : 1;
+      const delta = event.deltaY * deltaMultiplier;
+      if (Math.abs(delta) < 0.01) return;
+
+      const atStart = currentScroll <= sectionStart + 0.5 && wheelTarget <= sectionStart + 0.5;
+      const atEnd = currentScroll >= sectionEnd - 0.5 && wheelTarget >= sectionEnd - 0.5;
+      if ((delta < 0 && atStart) || (delta > 0 && atEnd)) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!wheelAnimationFrame) wheelTarget = clamp(currentScroll, sectionStart, sectionEnd);
+      wheelTarget = clamp(wheelTarget + delta, sectionStart, sectionEnd);
+      startWheelAnimation();
     };
 
     const seekVideo = () => {
@@ -200,13 +276,16 @@ export function CinematicHero() {
       scheduleUpdate();
     });
     resizeObserver.observe(section);
+    window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", scheduleUpdate);
     scheduleUpdate();
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
+      stopWheelAnimation();
       resizeObserver.disconnect();
+      window.removeEventListener("wheel", handleWheel, { capture: true });
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
@@ -246,6 +325,7 @@ export function CinematicHero() {
         data-started={started}
         data-ready={bootReady}
         data-reduced-motion={reducedMotion}
+        data-lenis-prevent-wheel
       >
         <div className="cinematic-frame">
           <div className="cinematic-media-stack" aria-hidden="true">
