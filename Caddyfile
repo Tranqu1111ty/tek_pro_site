@@ -38,6 +38,13 @@ tekpro.ru {
 		@unsupported_method not method GET HEAD
 		respond @unsupported_method 405
 
+		@hero_assets path /media/hero/*
+		handle @hero_assets {
+			root * /srv/public
+			header Cache-Control "public, max-age=31536000, immutable"
+			file_server
+		}
+
 		@public_assets path /favicon.svg /file.svg /globe.svg /window.svg /documents/* /fonts/* /media/*
 		handle @public_assets {
 			root * /srv/public

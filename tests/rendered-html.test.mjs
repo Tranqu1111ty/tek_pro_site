@@ -105,7 +105,12 @@ test("rejects non-object contact payloads", async () => {
 
 test("keeps required public assets and production components", async () => {
   const requiredFiles = [
-    "../public/media/video_loop.mp4",
+    "../public/media/hero/scene-1-desktop-v1.mp4",
+    "../public/media/hero/scene-1-mobile-v1.mp4",
+    "../public/media/hero/scene-2-desktop-v1.mp4",
+    "../public/media/hero/scene-2-mobile-v1.mp4",
+    "../public/media/hero/scene-3-desktop-v2.mp4",
+    "../public/media/hero/scene-3-mobile-v2.mp4",
     "../public/media/logo6.png",
     "../public/media/sertificate.jpg",
     "../public/media/brand/tekpro-logo-email.png",
@@ -117,12 +122,13 @@ test("keeps required public assets and production components", async () => {
 
   await Promise.all(requiredFiles.map((file) => access(new URL(file, import.meta.url))));
 
-  const [page, footer, consent, contactRoute, projectModal, caddyfile] = await Promise.all([
+  const [page, footer, consent, contactRoute, projectModal, cinematicHero, caddyfile] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/layout/Footer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/privacy/CookieConsent.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/contact/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../components/contact/ProjectInquiryModal.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/cinematic/CinematicHero.tsx", import.meta.url), "utf8"),
     readFile(new URL("../Caddyfile", import.meta.url), "utf8"),
   ]);
 
@@ -156,6 +162,16 @@ test("keeps required public assets and production components", async () => {
   assert.match(contactRoute, /getEmailLogoContent/);
   assert.doesNotMatch(contactRoute, /border-left:3px/);
   assert.match(caddyfile, /\/media\/\*/);
+  assert.match(caddyfile, /\/media\/hero\/\*/);
+  assert.match(caddyfile, /max-age=31536000, immutable/);
+  assert.match(cinematicHero, /scene-1-desktop-v1\.mp4/);
+  assert.match(cinematicHero, /scene-3-mobile-v2\.mp4/);
+  assert.doesNotMatch(cinematicHero, /scene-3-(?:desktop|mobile)-v1\.mp4/);
+  assert.doesNotMatch(cinematicHero, /Моделируем/);
+  assert.match(cinematicHero, /site-loading-screen/);
+  assert.match(cinematicHero, /video\.seeking/);
+  assert.doesNotMatch(cinematicHero, /posterSrc|\.webp/);
+  assert.doesNotMatch(cinematicHero, /video_loop\.mp4/);
   assert.match(projectModal, /fetch\("\/api\/contact"/);
   assert.match(projectModal, /formatRussianPhone/);
   assert.match(projectModal, /deleteContentBackward/);
