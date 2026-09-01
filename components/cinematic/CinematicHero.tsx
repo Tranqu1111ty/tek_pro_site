@@ -222,8 +222,15 @@ export function CinematicHero() {
       const { index: sceneIndex, localTime } = locateScene(progress);
       const scene = HERO_SCENES[sceneIndex];
       const { stageIndex, stageProgress } = locateStage(timelineTime);
+      const finalStageIndex = content.hero.keywords.length - 1;
+      const exitProgress =
+        stageIndex === finalStageIndex ? clamp((stageProgress - 0.5) / 0.5) : 0;
 
       section.style.setProperty("--hero-intro-progress", introProgress.toFixed(4));
+      document.documentElement.style.setProperty(
+        "--hero-post-translate",
+        `${-(exitProgress * 81).toFixed(2)}svh`,
+      );
       const initialSideGap = sourceMode === "mobile" ? 8 : 12;
       section.style.setProperty(
         "--hero-side-gap",
@@ -343,6 +350,7 @@ export function CinematicHero() {
     return () => {
       window.cancelAnimationFrame(animationFrame);
       cacheAbortController.abort();
+      document.documentElement.style.removeProperty("--hero-post-translate");
       resizeObserver.disconnect();
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);

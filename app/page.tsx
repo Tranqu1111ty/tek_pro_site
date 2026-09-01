@@ -99,7 +99,8 @@ export default function Home() {
       <main>
         <CinematicHero />
 
-        <section className="section positioning" id="about">
+        <div className="post-hero-content">
+          <section className="section positioning" id="about">
           <div className="company-overview">
             <h2>
               Проектируем инфраструктуру,
@@ -143,9 +144,9 @@ export default function Home() {
               </div>
             </Accordion>
           </div>
-        </section>
+          </section>
 
-        <section className="section process-section" id="cycle">
+          <section className="section process-section" id="cycle">
           <div className="split-sequence split-sequence-process">
             <div className="sequence-cards sequence-cards-left">
               <ProcessCards />
@@ -155,9 +156,9 @@ export default function Home() {
               <p className="section-note">От исследования территории до контроля реализации объекта.</p>
             </div>
           </div>
-        </section>
+          </section>
 
-        <section className="section competencies-section" id="competencies">
+          <section className="section competencies-section" id="competencies">
           <div className="split-sequence split-sequence-competencies">
             <div className="sequence-copy sequence-copy-left">
               <h2>Работа с территорией,<br />инфраструктурой и рисками.</h2>
@@ -170,9 +171,9 @@ export default function Home() {
               <StickyCompetencies />
             </div>
           </div>
-        </section>
+          </section>
 
-        <section className="section technical-section" id="standards">
+          <section className="section technical-section" id="standards">
           <div className="section-grid technical-heading">
             <h2>Нормативная база<br />и проверяемые данные.</h2>
             <p className="section-note">Документы, регистрации и область лабораторных испытаний.</p>
@@ -236,13 +237,13 @@ export default function Home() {
               </div>
             </article>
           </div>
-        </section>
+          </section>
 
-        <section className="section digital-section" id="it-ai">
+          <section className="section digital-section" id="it-ai">
           <StickyScrollGallery intro={content.itAi} items={digitalCapabilities} />
-        </section>
+          </section>
 
-        <section className="section experience-section" id="experience">
+          <section className="section experience-section" id="experience">
           <div className="section-grid experience-heading">
             <h2>Документированная<br />практика.</h2>
           </div>
@@ -251,7 +252,8 @@ export default function Home() {
               <article key={entry}><p>{entry}</p></article>
             ))}
           </div>
-        </section>
+          </section>
+        </div>
       </main>
       <Footer />
     </>
