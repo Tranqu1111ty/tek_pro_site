@@ -6,37 +6,21 @@ import { AnimatePresence, motion } from "motion/react";
 import { content } from "@/data/content";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
-type HeroScene = {
-  desktopSrc: string;
-  mobileSrc: string;
-  duration: number;
-};
-
 type SourceMode = "desktop" | "mobile";
 
-const HERO_SCENES: readonly HeroScene[] = [
-  {
-    desktopSrc: "/media/hero/scene-3-desktop-v3.mp4",
-    mobileSrc: "/media/hero/scene-3-mobile-v3.mp4",
-    duration: 4.041667,
-  },
-  {
-    desktopSrc: "/media/hero/scene-1-desktop-v1.mp4",
-    mobileSrc: "/media/hero/scene-1-mobile-v1.mp4",
-    duration: 8.041667,
-  },
-  {
-    desktopSrc: "/media/hero/scene-2-desktop-v1.mp4",
-    mobileSrc: "/media/hero/scene-2-mobile-v1.mp4",
-    duration: 6.041667,
-  },
-] as const;
+const HERO_VIDEO = {
+  desktopSrc: "/media/hero/hero-timeline-desktop-v1.mp4",
+  mobileSrc: "/media/hero/hero-timeline-mobile-v1.mp4",
+} as const;
 
-const TOTAL_DURATION = HERO_SCENES.reduce((total, scene) => total + scene.duration, 0);
-const MODELING_STAGE_END = HERO_SCENES[0].duration / 2;
-const PROJECT_STAGE_END = HERO_SCENES[0].duration;
-const RESEARCH_STAGE_END = PROJECT_STAGE_END + HERO_SCENES[1].duration / 2;
-const PREPARATION_STAGE_END = PROJECT_STAGE_END + HERO_SCENES[1].duration;
+const FIRST_SCENE_DURATION = 4.041667;
+const SECOND_SCENE_DURATION = 8.041667;
+const THIRD_SCENE_DURATION = 6.041667;
+const TOTAL_DURATION = FIRST_SCENE_DURATION + SECOND_SCENE_DURATION + THIRD_SCENE_DURATION;
+const MODELING_STAGE_END = FIRST_SCENE_DURATION / 2;
+const PROJECT_STAGE_END = FIRST_SCENE_DURATION;
+const RESEARCH_STAGE_END = PROJECT_STAGE_END + SECOND_SCENE_DURATION / 2;
+const PREPARATION_STAGE_END = PROJECT_STAGE_END + SECOND_SCENE_DURATION;
 const BUILD_STAGE_END = PREPARATION_STAGE_END + 3;
 const STAGE_END_TIMES = [
   MODELING_STAGE_END,
@@ -50,26 +34,6 @@ const INTRO_REVEAL_PORTION = 0.05;
 
 function clamp(value: number, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, value));
-}
-
-function locateScene(timelineTime: number) {
-  let elapsed = 0;
-
-  for (let index = 0; index < HERO_SCENES.length; index += 1) {
-    const scene = HERO_SCENES[index];
-    const sceneEnd = elapsed + scene.duration;
-
-    if (timelineTime < sceneEnd || index === HERO_SCENES.length - 1) {
-      return {
-        index,
-        localTime: clamp(timelineTime - elapsed, 0, scene.duration),
-      };
-    }
-
-    elapsed = sceneEnd;
-  }
-
-  return { index: HERO_SCENES.length - 1, localTime: HERO_SCENES.at(-1)!.duration };
 }
 
 function locateStage(timelineTime: number) {
@@ -91,12 +55,9 @@ function locateStage(timelineTime: number) {
 
 export function CinematicHero() {
   const sectionRef = useRef<HTMLElement | null>(null);
-  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const barFillRefs = useRef<Array<HTMLElement | null>>([]);
-  const slotScenesRef = useRef<Array<number | null>>([null, null]);
-  const targetTimesRef = useRef([0, 0]);
-  const activeSlotRef = useRef<number | null>(null);
-  const readySlotsRef = useRef([false, false]);
+  const targetTimeRef = useRef(0);
   const [activeStage, setActiveStage] = useState(0);
   const [started, setStarted] = useState(false);
   const [bootReady, setBootReady] = useState(false);
@@ -115,8 +76,8 @@ export function CinematicHero() {
 
   useEffect(() => {
     const section = sectionRef.current;
-    if (!section || !sourceMode) return;
-    const videos = videoRefs.current.slice();
+    const video = videoRef.current;
+    if (!section || !video || !sourceMode) return;
     const reduceMotion =
       reducedMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -125,22 +86,12 @@ export function CinematicHero() {
     let sectionEnd = 1;
     let lastStarted = false;
     let lastStage = -1;
-    let cacheWarmingStarted = false;
-    const cacheAbortController = new AbortController();
 
-    const clearVideos = () => {
-      videos.forEach((video) => {
-        if (!video) return;
-        video.pause();
-        video.style.opacity = "0";
-        video.removeAttribute("src");
-        video.removeAttribute("data-scene");
-        video.load();
-      });
-      slotScenesRef.current = [null, null];
-      targetTimesRef.current = [0, 0];
-      readySlotsRef.current = [false, false];
-      activeSlotRef.current = null;
+    const clearVideo = () => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      targetTimeRef.current = 0;
     };
 
     const measure = () => {
@@ -153,57 +104,10 @@ export function CinematicHero() {
       );
     };
 
-    const showOnlySlot = (slotIndex: number) => {
-      if (activeSlotRef.current === slotIndex) return;
-      videos.forEach((video, index) => {
-        if (video) video.style.opacity = index === slotIndex ? "1" : "0";
-      });
-      activeSlotRef.current = slotIndex;
-    };
+    const seekVideo = () => {
+      if (video.readyState < 1 || video.seeking) return;
 
-    const assignSceneToSlot = (sceneIndex: number) => {
-      const assignedSlot = slotScenesRef.current.indexOf(sceneIndex);
-      if (assignedSlot >= 0) return assignedSlot;
-
-      const slotIndex =
-        activeSlotRef.current === null ? 0 : activeSlotRef.current === 0 ? 1 : 0;
-      const video = videos[slotIndex];
-      if (!video) return slotIndex;
-
-      const scene = HERO_SCENES[sceneIndex];
-      slotScenesRef.current[slotIndex] = sceneIndex;
-      readySlotsRef.current[slotIndex] = false;
-      targetTimesRef.current[slotIndex] = 0;
-      video.style.opacity = "0";
-      video.dataset.scene = String(sceneIndex);
-      video.src = sourceMode === "mobile" ? scene.mobileSrc : scene.desktopSrc;
-      video.preload = "auto";
-      video.load();
-      return slotIndex;
-    };
-
-    const warmRemainingVideoCache = async () => {
-      if (cacheWarmingStarted) return;
-      cacheWarmingStarted = true;
-
-      for (const scene of HERO_SCENES.slice(1)) {
-        const src = sourceMode === "mobile" ? scene.mobileSrc : scene.desktopSrc;
-        try {
-          await fetch(src, {
-            cache: "force-cache",
-            signal: cacheAbortController.signal,
-          });
-        } catch {
-          if (cacheAbortController.signal.aborted) return;
-        }
-      }
-    };
-
-    const seekSlot = (slotIndex: number) => {
-      const video = videos[slotIndex];
-      if (!video || video.readyState < 1 || video.seeking) return;
-
-      const targetTime = targetTimesRef.current[slotIndex];
+      const targetTime = targetTimeRef.current;
       const safeTime = Math.min(
         Math.max(0, targetTime),
         Math.max(0, (Number.isFinite(video.duration) ? video.duration : 0) - 0.001),
@@ -223,8 +127,6 @@ export function CinematicHero() {
         ? 0
         : clamp(stickyProgress / INTRO_REVEAL_PORTION);
       const timelineTime = stickyProgress * TOTAL_DURATION;
-      const { index: sceneIndex, localTime } = locateScene(timelineTime);
-      const scene = HERO_SCENES[sceneIndex];
       const { stageIndex, stageProgress } = locateStage(timelineTime);
 
       section.style.setProperty("--hero-intro-progress", introProgress.toFixed(4));
@@ -255,85 +157,43 @@ export function CinematicHero() {
         bar.style.transform = `scaleX(${fill.toFixed(4)})`;
       });
 
-      const targetSlot = assignSceneToSlot(sceneIndex);
-      targetTimesRef.current[targetSlot] = localTime;
-      seekSlot(targetSlot);
-
-      const targetVideo = videos[targetSlot];
-      if (
-        targetVideo &&
-        readySlotsRef.current[targetSlot] &&
-        !targetVideo.seeking &&
-        Math.abs(targetVideo.currentTime - targetTimesRef.current[targetSlot]) <= 0.08
-      ) {
-        showOnlySlot(targetSlot);
-      }
-
-      const visibleScene =
-        activeSlotRef.current === null
-          ? null
-          : slotScenesRef.current[activeSlotRef.current];
-      if (visibleScene === sceneIndex) {
-        const scenePortion = localTime / scene.duration;
-        if (scenePortion >= 0.35 && sceneIndex < HERO_SCENES.length - 1) {
-          assignSceneToSlot(sceneIndex + 1);
-        } else if (scenePortion <= 0.35 && sceneIndex > 0) {
-          assignSceneToSlot(sceneIndex - 1);
-        }
-      }
+      targetTimeRef.current = timelineTime;
+      seekVideo();
     };
 
     const scheduleUpdate = () => {
       if (!animationFrame) animationFrame = window.requestAnimationFrame(update);
     };
 
-    const handleLoadedMetadata = (event: Event) => {
-      const video = event.currentTarget as HTMLVideoElement;
-      const slotIndex = videos.indexOf(video);
-      if (slotIndex < 0) return;
-      seekSlot(slotIndex);
+    const handleLoadedMetadata = () => {
+      seekVideo();
       scheduleUpdate();
     };
 
-    const handleLoadedData = (event: Event) => {
-      const video = event.currentTarget as HTMLVideoElement;
-      const slotIndex = videos.indexOf(video);
-      const sceneIndex = Number(video.dataset.scene);
-      if (slotIndex < 0 || !Number.isInteger(sceneIndex)) return;
-
-      readySlotsRef.current[slotIndex] = true;
-      if (sceneIndex === 0) {
-        setBootReady(true);
-        setLoadFailed(false);
-        void warmRemainingVideoCache();
-      }
+    const handleLoadedData = () => {
+      setBootReady(true);
+      setLoadFailed(false);
       scheduleUpdate();
     };
 
-    const handleSeeked = (event: Event) => {
-      const video = event.currentTarget as HTMLVideoElement;
-      const slotIndex = videos.indexOf(video);
-      if (slotIndex < 0) return;
-      seekSlot(slotIndex);
+    const handleSeeked = () => {
+      seekVideo();
       scheduleUpdate();
     };
 
-    const handleVideoError = (event: Event) => {
-      const video = event.currentTarget as HTMLVideoElement;
-      if (video.dataset.scene === "0") setLoadFailed(true);
-    };
+    const handleVideoError = () => setLoadFailed(true);
 
     setBootReady(false);
     setLoadFailed(false);
-    clearVideos();
+    clearVideo();
     measure();
-    videos.forEach((video) => {
-      video?.addEventListener("loadedmetadata", handleLoadedMetadata);
-      video?.addEventListener("loadeddata", handleLoadedData);
-      video?.addEventListener("seeked", handleSeeked);
-      video?.addEventListener("error", handleVideoError);
-    });
-    assignSceneToSlot(0);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("loadeddata", handleLoadedData);
+    video.addEventListener("seeked", handleSeeked);
+    video.addEventListener("error", handleVideoError);
+    video.src = sourceMode === "mobile" ? HERO_VIDEO.mobileSrc : HERO_VIDEO.desktopSrc;
+    video.preload = "auto";
+    video.load();
 
     const resizeObserver = new ResizeObserver(() => {
       measure();
@@ -346,17 +206,14 @@ export function CinematicHero() {
 
     return () => {
       window.cancelAnimationFrame(animationFrame);
-      cacheAbortController.abort();
       resizeObserver.disconnect();
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
-      videos.forEach((video) => {
-        video?.removeEventListener("loadedmetadata", handleLoadedMetadata);
-        video?.removeEventListener("loadeddata", handleLoadedData);
-        video?.removeEventListener("seeked", handleSeeked);
-        video?.removeEventListener("error", handleVideoError);
-      });
-      clearVideos();
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("seeked", handleSeeked);
+      video.removeEventListener("error", handleVideoError);
+      clearVideo();
     };
   }, [reducedMotion, sourceMode]);
 
@@ -392,19 +249,14 @@ export function CinematicHero() {
       >
         <div className="cinematic-frame">
           <div className="cinematic-media-stack" aria-hidden="true">
-            {[0, 1].map((slotIndex) => (
-              <video
-                key={slotIndex}
-                ref={(node) => {
-                  videoRefs.current[slotIndex] = node;
-                }}
-                className="cinematic-media"
-                muted
-                playsInline
-                preload="auto"
-                tabIndex={-1}
-              />
-            ))}
+            <video
+              ref={videoRef}
+              className="cinematic-media"
+              muted
+              playsInline
+              preload="auto"
+              tabIndex={-1}
+            />
           </div>
 
           <div className="cinematic-shade" aria-hidden="true" />

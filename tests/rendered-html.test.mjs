@@ -131,12 +131,8 @@ test("rejects non-object contact payloads", async () => {
 
 test("keeps required public assets and production components", async () => {
   const requiredFiles = [
-    "../public/media/hero/scene-1-desktop-v1.mp4",
-    "../public/media/hero/scene-1-mobile-v1.mp4",
-    "../public/media/hero/scene-2-desktop-v1.mp4",
-    "../public/media/hero/scene-2-mobile-v1.mp4",
-    "../public/media/hero/scene-3-desktop-v3.mp4",
-    "../public/media/hero/scene-3-mobile-v3.mp4",
+    "../public/media/hero/hero-timeline-desktop-v1.mp4",
+    "../public/media/hero/hero-timeline-mobile-v1.mp4",
     "../public/media/logo6.png",
     "../public/media/sertificate.jpg",
     "../public/media/brand/tekpro-logo-email.png",
@@ -150,13 +146,14 @@ test("keeps required public assets and production components", async () => {
 
   await Promise.all(requiredFiles.map((file) => access(new URL(file, import.meta.url))));
 
-  const [page, footer, consent, contactRoute, projectModal, cinematicHero, caddyfile] = await Promise.all([
+  const [page, footer, consent, contactRoute, projectModal, cinematicHero, globalStyles, caddyfile] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/layout/Footer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/privacy/CookieConsent.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/contact/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../components/contact/ProjectInquiryModal.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/cinematic/CinematicHero.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../Caddyfile", import.meta.url), "utf8"),
   ]);
 
@@ -197,25 +194,31 @@ test("keeps required public assets and production components", async () => {
   assert.match(caddyfile, /max-age=31536000, immutable/);
   assert.match(caddyfile, /@legacy_pages path \/cgi-bin\/\*/);
   assert.match(caddyfile, /redir @legacy_pages https:\/\/tekpro\.ru\/ permanent/);
-  assert.match(cinematicHero, /scene-1-desktop-v1\.mp4/);
-  assert.match(cinematicHero, /scene-3-desktop-v3\.mp4/);
-  assert.match(cinematicHero, /scene-3-mobile-v3\.mp4/);
-  assert.match(cinematicHero, /duration: 8\.041667/);
-  assert.match(cinematicHero, /duration: 6\.041667/);
-  assert.match(cinematicHero, /MODELING_STAGE_END = HERO_SCENES\[0\]\.duration \/ 2/);
-  assert.match(cinematicHero, /PROJECT_STAGE_END = HERO_SCENES\[0\]\.duration/);
+  assert.match(cinematicHero, /hero-timeline-desktop-v1\.mp4/);
+  assert.match(cinematicHero, /hero-timeline-mobile-v1\.mp4/);
+  assert.match(cinematicHero, /FIRST_SCENE_DURATION = 4\.041667/);
+  assert.match(cinematicHero, /SECOND_SCENE_DURATION = 8\.041667/);
+  assert.match(cinematicHero, /THIRD_SCENE_DURATION = 6\.041667/);
+  assert.match(cinematicHero, /MODELING_STAGE_END = FIRST_SCENE_DURATION \/ 2/);
+  assert.match(cinematicHero, /PROJECT_STAGE_END = FIRST_SCENE_DURATION/);
+  assert.match(cinematicHero, /RESEARCH_STAGE_END = PROJECT_STAGE_END \+ SECOND_SCENE_DURATION \/ 2/);
+  assert.match(cinematicHero, /PREPARATION_STAGE_END = PROJECT_STAGE_END \+ SECOND_SCENE_DURATION/);
   assert.match(cinematicHero, /BUILD_STAGE_END = PREPARATION_STAGE_END \+ 3/);
   assert.match(cinematicHero, /timelineTime = stickyProgress \* TOTAL_DURATION/);
+  assert.match(cinematicHero, /targetTimeRef\.current = timelineTime/);
+  assert.match(cinematicHero, /ref=\{videoRef\}/);
+  assert.doesNotMatch(cinematicHero, /HERO_SCENES|locateScene|assignSceneToSlot|slotScenesRef/);
   assert.doesNotMatch(cinematicHero, /HERO_STICKY_END_TIME|releasedProgress/);
   assert.match(cinematicHero, /locateStage\(timelineTime\)/);
   assert.doesNotMatch(cinematicHero, /hero-post-translate/);
   assert.doesNotMatch(cinematicHero, /stageIndexes/);
-  assert.doesNotMatch(cinematicHero, /scene-3-(?:desktop|mobile)-v[12]\.mp4/);
+  assert.doesNotMatch(cinematicHero, /scene-[123]-(?:desktop|mobile)-v\d+\.mp4/);
   assert.doesNotMatch(cinematicHero, /Моделируем/);
   assert.match(cinematicHero, /site-loading-screen/);
   assert.match(cinematicHero, /video\.seeking/);
   assert.doesNotMatch(cinematicHero, /posterSrc|\.webp/);
   assert.doesNotMatch(cinematicHero, /video_loop\.mp4/);
+  assert.match(globalStyles, /\.cinematic-media\s*\{[^}]*opacity:\s*1/s);
   assert.match(projectModal, /fetch\("\/api\/contact"/);
   assert.match(projectModal, /formatRussianPhone/);
   assert.match(projectModal, /deleteContentBackward/);

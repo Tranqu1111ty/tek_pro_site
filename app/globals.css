@@ -488,8 +488,7 @@ button, input, textarea, select { font: inherit; }
 
 .cinematic-media {
   object-fit: cover;
-  opacity: 0;
-  will-change: opacity;
+  opacity: 1;
 }
 
 .cinematic-media { z-index: 1; }
