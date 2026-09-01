@@ -99,8 +99,7 @@ export default function Home() {
       <main>
         <CinematicHero />
 
-        <div className="post-hero-content">
-          <section className="section positioning" id="about">
+        <section className="section positioning" id="about">
           <div className="company-overview">
             <h2>
               Проектируем инфраструктуру,
@@ -252,8 +251,7 @@ export default function Home() {
               <article key={entry}><p>{entry}</p></article>
             ))}
           </div>
-          </section>
-        </div>
+        </section>
       </main>
       <Footer />
     </>

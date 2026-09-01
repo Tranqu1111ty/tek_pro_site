@@ -15,7 +15,6 @@
   --gutter: clamp(22px, 4.3vw, 78px);
   --content: 1600px;
   --line: rgba(191, 210, 227, 0.2);
-  --hero-post-translate: 0svh;
 }
 
 * { box-sizing: border-box; }
@@ -693,20 +692,8 @@ button, input, textarea, select { font: inherit; }
   text-wrap: balance;
 }
 
-.post-hero-content {
-  z-index: 7;
-  position: relative;
-  margin-top: -19svh;
-  margin-bottom: -81svh;
-  transform: translateY(var(--hero-post-translate));
-  will-change: transform;
-}
-
 .positioning {
-  min-height: 100svh;
-  border-radius: 12px 12px 0 0;
   background: var(--white);
-  box-shadow: 0 -24px 70px rgba(6, 20, 38, 0.22);
   color: var(--navy);
 }
 
@@ -2357,11 +2344,6 @@ button, input, textarea, select { font: inherit; }
   .cinematic[data-reduced-motion="true"] .hero-scroll-arrow {
     opacity: 0.8;
     animation: none;
-  }
-  .post-hero-content {
-    margin-top: 0;
-    margin-bottom: 0;
-    transform: none;
   }
 }
 

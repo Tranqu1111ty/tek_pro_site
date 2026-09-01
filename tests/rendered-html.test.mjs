@@ -133,6 +133,7 @@ test("keeps required public assets and production components", async () => {
   ]);
 
   assert.match(page, /<StickyScrollGallery/);
+  assert.doesNotMatch(page, /post-hero-content/);
   assert.doesNotMatch(page, /DroneStage|DroneScene/);
   assert.match(footer, /DynamicWaveCanvasBackground/);
   assert.match(consent, /localStorage\.setItem/);
@@ -166,6 +167,15 @@ test("keeps required public assets and production components", async () => {
   assert.match(caddyfile, /max-age=31536000, immutable/);
   assert.match(cinematicHero, /scene-1-desktop-v1\.mp4/);
   assert.match(cinematicHero, /scene-3-mobile-v2\.mp4/);
+  assert.match(cinematicHero, /duration: 8\.041667/);
+  assert.match(cinematicHero, /duration: 6\.041667/);
+  assert.match(cinematicHero, /FIRST_SCENE_FAST_STAGES_END = 5\.5/);
+  assert.match(cinematicHero, /SECOND_SCENE_BUILD_STAGE_END = 3/);
+  assert.match(cinematicHero, /HERO_STICKY_END_TIME/);
+  assert.match(cinematicHero, /releasedProgress/);
+  assert.match(cinematicHero, /locateStage\(timelineTime\)/);
+  assert.doesNotMatch(cinematicHero, /hero-post-translate/);
+  assert.doesNotMatch(cinematicHero, /stageIndexes/);
   assert.doesNotMatch(cinematicHero, /scene-3-(?:desktop|mobile)-v1\.mp4/);
   assert.doesNotMatch(cinematicHero, /Моделируем/);
   assert.match(cinematicHero, /site-loading-screen/);

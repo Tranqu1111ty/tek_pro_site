@@ -43,14 +43,15 @@ const STAGE_END_TIMES = [
   HERO_SCENES[0].duration + HERO_SCENES[1].duration,
   TOTAL_DURATION,
 ] as const;
+const FINAL_STAGE_START = STAGE_END_TIMES[STAGE_END_TIMES.length - 2];
+const HERO_STICKY_END_TIME = FINAL_STAGE_START + (TOTAL_DURATION - FINAL_STAGE_START) / 2;
 const INTRO_REVEAL_PORTION = 0.05;
 
 function clamp(value: number, minimum = 0, maximum = 1) {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-function locateScene(progress: number) {
-  const timelineTime = progress * TOTAL_DURATION;
+function locateScene(timelineTime: number) {
   let elapsed = 0;
 
   for (let index = 0; index < HERO_SCENES.length; index += 1) {
@@ -214,23 +215,25 @@ export function CinematicHero() {
 
     const update = () => {
       animationFrame = 0;
-      const progress = reduceMotion
+      const stickyProgress = reduceMotion
         ? 0
         : clamp((window.scrollY - sectionStart) / (sectionEnd - sectionStart));
-      const introProgress = reduceMotion ? 0 : clamp(progress / INTRO_REVEAL_PORTION);
-      const timelineTime = progress * TOTAL_DURATION;
-      const { index: sceneIndex, localTime } = locateScene(progress);
+      const releasedProgress = reduceMotion
+        ? 0
+        : clamp((window.scrollY - sectionEnd) / window.innerHeight);
+      const introProgress = reduceMotion
+        ? 0
+        : clamp(stickyProgress / INTRO_REVEAL_PORTION);
+      const timelineTime =
+        stickyProgress < 1
+          ? stickyProgress * HERO_STICKY_END_TIME
+          : HERO_STICKY_END_TIME +
+            releasedProgress * (TOTAL_DURATION - HERO_STICKY_END_TIME);
+      const { index: sceneIndex, localTime } = locateScene(timelineTime);
       const scene = HERO_SCENES[sceneIndex];
       const { stageIndex, stageProgress } = locateStage(timelineTime);
-      const finalStageIndex = content.hero.keywords.length - 1;
-      const exitProgress =
-        stageIndex === finalStageIndex ? clamp((stageProgress - 0.5) / 0.5) : 0;
 
       section.style.setProperty("--hero-intro-progress", introProgress.toFixed(4));
-      document.documentElement.style.setProperty(
-        "--hero-post-translate",
-        `${-(exitProgress * 81).toFixed(2)}svh`,
-      );
       const initialSideGap = sourceMode === "mobile" ? 8 : 12;
       section.style.setProperty(
         "--hero-side-gap",
@@ -241,7 +244,7 @@ export function CinematicHero() {
         `${((1 - introProgress) * 8).toFixed(2)}px`,
       );
 
-      const nextStarted = !reduceMotion && progress > 0.001;
+      const nextStarted = !reduceMotion && stickyProgress > 0.001;
       if (nextStarted !== lastStarted) {
         lastStarted = nextStarted;
         setStarted(nextStarted);
@@ -350,7 +353,6 @@ export function CinematicHero() {
     return () => {
       window.cancelAnimationFrame(animationFrame);
       cacheAbortController.abort();
-      document.documentElement.style.removeProperty("--hero-post-translate");
       resizeObserver.disconnect();
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
