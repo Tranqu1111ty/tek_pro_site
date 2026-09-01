@@ -136,6 +136,8 @@ test("keeps required public assets and production components", async () => {
   assert.doesNotMatch(page, /post-hero-content/);
   assert.doesNotMatch(page, /DroneStage|DroneScene/);
   assert.match(footer, /DynamicWaveCanvasBackground/);
+  assert.match(footer, /Обсудим ваш проект/);
+  assert.match(footer, /footer-cta-note/);
   assert.match(consent, /localStorage\.setItem/);
   assert.match(consent, /accepted/);
   assert.match(consent, /rejected/);

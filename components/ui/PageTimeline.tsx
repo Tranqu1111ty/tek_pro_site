@@ -23,6 +23,7 @@ type TimelineMetrics = {
 
 export function PageTimeline() {
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const compactLayout = useMediaQuery("(max-width: 900px)");
   const metricsRef = useRef<TimelineMetrics>({
     heroEnd: 0,
     pageEnd: 1,
@@ -58,7 +59,9 @@ export function PageTimeline() {
           window.scrollY + 1 >= chapterScroll ? index : activeIndex,
         -1,
       );
-      const nextVisibility = distanceAfterHero >= -1;
+      const contactsIndex = chapters.length - 1;
+      const nextVisibility =
+        distanceAfterHero >= -1 && !(compactLayout && nextActiveChapter === contactsIndex);
 
       rawProgress.set(nextProgress);
       rawVisibility.set(nextVisibility ? 1 : 0);
@@ -121,7 +124,7 @@ export function PageTimeline() {
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleMeasure);
     };
-  }, [rawProgress, rawVisibility]);
+  }, [compactLayout, rawProgress, rawVisibility]);
 
   return (
     <motion.nav

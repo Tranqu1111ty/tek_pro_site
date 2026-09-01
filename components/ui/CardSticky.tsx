@@ -41,6 +41,29 @@ function useSequenceEndAlignment() {
         );
         const copyHeight = copy.getBoundingClientRect().height;
         const cardHeight = lastCard.getBoundingClientRect().height;
+        const sequenceStyle = window.getComputedStyle(sequence);
+        const isVerticalSequence =
+          sequenceStyle.display === "flex" && sequenceStyle.flexDirection === "column";
+        if (isVerticalSequence) {
+          const desiredStackTop = copyTop + copyHeight + 18;
+          const stackTop = Math.max(
+            copyTop + 24,
+            Math.min(desiredStackTop, window.innerHeight - cardHeight - 24),
+          );
+          const stackBottomAtSectionEnd = window.innerHeight - sectionPaddingBottom;
+
+          stack.style.setProperty("--stack-top", `${stackTop.toFixed(2)}px`);
+          stack.style.setProperty(
+            "--stack-end-space",
+            `${Math.max(0, stackBottomAtSectionEnd - stackTop - cardHeight).toFixed(2)}px`,
+          );
+          copy.style.setProperty(
+            "--copy-end-space",
+            `${Math.max(0, stackBottomAtSectionEnd - copyTop - copyHeight).toFixed(2)}px`,
+          );
+          return;
+        }
+
         const copyCenter = copyTop + copyHeight / 2;
         const stackBottomAtSectionEnd =
           window.innerHeight - sectionPaddingBottom;
